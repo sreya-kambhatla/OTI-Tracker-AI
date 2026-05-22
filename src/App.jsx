@@ -11,6 +11,7 @@ import WorkloadView from './components/WorkloadView';
 import ImportModal from './components/ImportModal';
 import Toast from './components/Toast';
 import AIQuery from './components/AIQuery';
+import SettingsModal from './components/SettingsModal';
 
 function App() {
   const [logs,    setLogs]    = React.useState(() => loadFromStorage() || []);
@@ -18,7 +19,8 @@ function App() {
   const [toast,   setToast]   = React.useState(null);
   const [tab,     setTab]     = React.useState("otis");
   const [sortBy,  setSortBy]  = React.useState("recent");
-  const [showImport, setShowImport] = React.useState(false);
+  const [showImport,   setShowImport]   = React.useState(false);
+  const [showSettings, setShowSettings] = React.useState(false);
 
   React.useEffect(() => { saveToStorage(logs); }, [logs]);
 
@@ -57,6 +59,7 @@ function App() {
         onImport={() => setShowImport(true)}
         onExport={() => exportToCSV(filteredLogs)}
         onReset={handleResetData}
+        onSettings={() => setShowSettings(true)}
       />
 
       <div className="page-body">
@@ -118,7 +121,8 @@ function App() {
         </div>
       </div>
 
-      {showImport && <ImportModal onImport={handleImport} onClose={() => setShowImport(false)} />}
+      {showImport   && <ImportModal  onImport={handleImport} onClose={() => setShowImport(false)} />}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );
