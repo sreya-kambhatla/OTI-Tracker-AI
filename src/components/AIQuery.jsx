@@ -52,9 +52,15 @@ Rules:
 Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assignees: ${assignees.join(", ")}`;
 
     try {
+      const apiKey = localStorage.getItem("oti-ai-key");
+      if (!apiKey) {
+        setError("No API key configured — click the ⚙ Settings button in the top bar to add your Anthropic API key.");
+        setLoading(false);
+        return;
+      }
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 200,
