@@ -188,7 +188,7 @@ The dashboard accepts `.xlsx`, `.xls`, and `.csv` files. Column names are matche
 ## 🚀 Getting Started
 
 ### Link For Web Application
-https://sreya-kambhatla.github.io/OTI-Tracker/
+https://sreya-kambhatla.github.io/OTI-Tracker-AI/
 
 ### Prerequisites
 - Node.js 18+
