@@ -234,7 +234,16 @@ export function parseCSV(text) {
 
   for (let i = 1; i < lines.length; i++) {
     const raw  = lines[i];
-    const cols = raw.match(/"[^"]*"|[^,]*/g) || raw.split(",");
+    // Proper CSV row parser — handles quoted fields with commas inside
+    const cols = [];
+    let cur = "", inQuote = false;
+    for (let c = 0; c < raw.length; c++) {
+      const ch = raw[c];
+      if (ch === '"') { inQuote = !inQuote; }
+      else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = ""; }
+      else { cur += ch; }
+    }
+    cols.push(cur.trim());
     const get  = (field) => idx[field] !== -1 ? (cols[idx[field]] || "").replace(/^"|"$/g,"").trim() : "";
 
     const otiId     = get("otiid");
