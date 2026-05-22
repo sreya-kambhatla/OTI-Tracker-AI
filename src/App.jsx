@@ -63,6 +63,8 @@ function App() {
         <div className="page-static">
           <Dashboard logs={filteredLogs} />
 
+          <AIQuery onApplyFilters={filters => setFilters(filters)} allLogs={logs} />
+
           <div className="tab-bar">
             {[
               { id:"otis",     label:"OTIs" },
@@ -77,7 +79,6 @@ function App() {
 
           {tab === "otis" && (
             <div>
-              <AIQuery onApplyFilters={filters => setFilters(filters)} allLogs={logs} />
               <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
               <AddEntryForm onAdd={handleAdd} allLogs={logs} />
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"8px 0 4px" }}>
