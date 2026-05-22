@@ -7,9 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        working-directory: ./OTI-Tracker-AI
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -20,4 +17,4 @@ jobs:
       - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./OTI-Tracker-AI/dist
+          publish_dir: ./dist
