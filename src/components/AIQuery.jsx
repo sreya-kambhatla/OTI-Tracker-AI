@@ -52,7 +52,7 @@ Rules:
 Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assignees: ${assignees.join(", ")}`;
 
     try {
-      const response = await fetch("https://oti-proxy-oe9dvlqyd-oti-tracker-ai.vercel.app/api/claude", {
+      const response = await fetch("https://oti-proxy.vercel.app/api/claude", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
