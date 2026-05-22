@@ -23,7 +23,7 @@ A web-based dashboard that:
 - Provides real-time summary metrics with animated flip cards
 - Visualises workload by OTI, by week, and by assignee
 - Allows inline editing, status updates, and log entry without leaving the browser
-- Supports natural language querying via AI to filter data without using dropdowns
+- Designed to support natural language querying via AI to filter data without using dropdowns *(in development)*
 - Persists data locally and exports back to CSV for stakeholders who prefer spreadsheets
 
 ---
@@ -65,11 +65,11 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 - **4 flip cards** — In Progress, Completed, Blocked, Team Overview. Click any card to reveal the full list of OTIs or team members
 - **Animated metrics** — numbers count up on load for a polished feel
 
-### AI-Powered Filtering
-- **Natural language queries** — type "show critical OTIs" or "who hasn't logged this week?" instead of using dropdowns
-- **Powered by Claude** — uses Anthropic's Claude API to interpret queries and apply filters automatically
+### AI-Powered Filtering *(In Development)*
+- **Natural language queries** — designed to support queries like "show critical OTIs" or "who hasn't logged this week?" instead of using dropdowns
+- **Architecture ready** — built to connect to an AI API (Anthropic Claude or Azure OpenAI) to interpret queries and apply filters automatically
 - **Suggestion chips** — quick-access prompts for common team lead queries
-- **Upgradeable** — can be migrated to Azure OpenAI to stay within Microsoft's ecosystem
+- **Enterprise path** — designed to migrate to Azure OpenAI to stay within Microsoft's ecosystem
 
 ### OTI Management
 - **OTI cards** — each card shows total hours, days logged, average per day, assignee, and last logged date
@@ -115,7 +115,7 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 | Build tool | Vite 4 |
 | Styling | Custom CSS with CSS variables + glassmorphism |
 | Excel parsing | SheetJS (xlsx) |
-| AI filtering | Anthropic Claude API |
+| AI filtering | Anthropic Claude API *(in development)* |
 | Data persistence | localStorage |
 | Deployment | GitHub Pages via GitHub Actions |
 | CI/CD | GitHub Actions (auto-deploy on push to main) |
@@ -236,7 +236,7 @@ A dummy dataset (`sample_data.csv`) is included in the repo to demo the dashboar
 | Weekly summary + assignee workload | ✅ Complete |
 | 5-level priority with Critical indicator | ✅ Complete |
 | Glassmorphism UI | ✅ Complete |
-| AI natural language filtering | ✅ Complete |
+| AI natural language filtering | 🚧 In Development |
 | Merge import — no duplicates on re-import | 🔜 Planned |
 | Excel Online two-way sync | 🔜 Planned |
 | Role-based views (team lead vs member) | 🔜 Planned |
@@ -254,7 +254,7 @@ This project was built as a complete business analyst portfolio piece demonstrat
 - **Stakeholder communication** — translating business needs into technical requirements
 - **End-to-end delivery** — from problem statement to deployed product
 - **Technical implementation** — React, Vite, SheetJS, GitHub Actions CI/CD
-- **AI integration** — natural language querying via Anthropic Claude API
+- **AI integration** — designed and architected natural language querying feature using Anthropic Claude API
 
 ---
 
