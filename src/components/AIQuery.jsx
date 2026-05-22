@@ -63,6 +63,11 @@ Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assi
         }),
       });
 
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error("Proxy error " + response.status + ": " + (errData.error || response.statusText));
+      }
+
       const data = await response.json();
       const text = data.content?.[0]?.text || "";
 
@@ -70,7 +75,7 @@ Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assi
       try {
         filters = JSON.parse(text.trim());
       } catch {
-        throw new Error("Could not parse AI response");
+        throw new Error("Could not parse AI response: " + text.slice(0, 100));
       }
 
       const valid = ["search","assignee","status","priority","month","year"];
@@ -83,7 +88,7 @@ Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assi
       setQuery("");
       onApplyFilters(cleaned);
     } catch (err) {
-      setError("Something went wrong — try rephrasing your question.");
+      setError("Error: " + err.message);
     } finally {
       setLoading(false);
     }
