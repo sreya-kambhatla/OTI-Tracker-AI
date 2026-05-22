@@ -23,6 +23,7 @@ A web-based dashboard that:
 - Provides real-time summary metrics with animated flip cards
 - Visualises workload by OTI, by week, and by assignee
 - Allows inline editing, status updates, and log entry without leaving the browser
+- Supports natural language querying via AI to filter data without using dropdowns
 - Persists data locally and exports back to CSV for stakeholders who prefer spreadsheets
 
 ---
@@ -54,6 +55,7 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 | R08 | Persist data between sessions | Should Have |
 | R09 | Critical priority visual indicator | Could Have |
 | R10 | Glassmorphism UI with dark theme | Could Have |
+| R11 | Natural language AI filtering | Could Have |
 
 ---
 
@@ -63,6 +65,12 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 - **4 flip cards** — In Progress, Completed, Blocked, Team Overview. Click any card to reveal the full list of OTIs or team members
 - **Animated metrics** — numbers count up on load for a polished feel
 
+### AI-Powered Filtering
+- **Natural language queries** — type "show critical OTIs" or "who hasn't logged this week?" instead of using dropdowns
+- **Powered by Claude** — uses Anthropic's Claude API to interpret queries and apply filters automatically
+- **Suggestion chips** — quick-access prompts for common team lead queries
+- **Upgradeable** — can be migrated to Azure OpenAI to stay within Microsoft's ecosystem
+
 ### OTI Management
 - **OTI cards** — each card shows total hours, days logged, average per day, assignee, and last logged date
 - **Inline editing** — click the edit icon on any log row to edit in place
@@ -71,6 +79,7 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 - **Notes field** — optional notes per log entry for blockers or progress updates
 
 ### Filtering & Search
+- Natural language AI queries
 - Search by OTI ID, title, or assignee
 - Filter by status, priority, assignee, year, and month
 - Sort by last logged, most hours, or least hours
@@ -106,6 +115,7 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 | Build tool | Vite 4 |
 | Styling | Custom CSS with CSS variables + glassmorphism |
 | Excel parsing | SheetJS (xlsx) |
+| AI filtering | Anthropic Claude API |
 | Data persistence | localStorage |
 | Deployment | GitHub Pages via GitHub Actions |
 | CI/CD | GitHub Actions (auto-deploy on push to main) |
@@ -115,7 +125,7 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 ## 📁 Project Structure
 
 ```
-OTI-Tracker/
+OTI-Tracker-AI/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml          # Auto-build and deploy pipeline
@@ -128,6 +138,7 @@ OTI-Tracker/
 │   └── components/
 │       ├── TopBar.jsx          # Fixed navigation header
 │       ├── Dashboard.jsx       # Overview metrics and flip cards
+│       ├── AIQuery.jsx         # Natural language AI filter input
 │       ├── Filters.jsx         # Search and filter controls
 │       ├── AddEntryForm.jsx    # Collapsible log entry form
 │       ├── OTICard.jsx         # Individual OTI card with inline edit
@@ -137,6 +148,7 @@ OTI-Tracker/
 │       └── Toast.jsx           # Auto-dismissing notification
 ├── index.html
 ├── package.json
+├── sample_data.csv             # Demo dataset for testing
 └── vite.config.js
 ```
 
@@ -167,7 +179,7 @@ Each log entry follows this structure:
 
 ## 📥 Import Format
 
-The dashboard accepts `.xlsx`, `.xls`, and `.csv` files. Column names are matched automatically — common variations are handled. For best results use the template format:
+The dashboard accepts `.xlsx`, `.xls`, and `.csv` files. Column names are matched automatically. For best results use the template format:
 
 | Column | Format | Example |
 |--------|--------|---------|
@@ -187,7 +199,7 @@ The dashboard accepts `.xlsx`, `.xls`, and `.csv` files. Column names are matche
 
 ## 🚀 Getting Started
 
-### Link For Web Application
+### Live Application
 https://sreya-kambhatla.github.io/OTI-Tracker-AI/
 
 ### Prerequisites
@@ -196,8 +208,8 @@ https://sreya-kambhatla.github.io/OTI-Tracker-AI/
 
 ### Local Development
 ```bash
-git clone https://sreya-kambhatla.github.io/OTI-Tracker.git
-cd oti-tracker
+git clone https://github.com/sreya-kambhatla/OTI-Tracker-AI.git
+cd OTI-Tracker-AI
 npm install
 npm run dev
 ```
@@ -224,9 +236,12 @@ A dummy dataset (`sample_data.csv`) is included in the repo to demo the dashboar
 | Weekly summary + assignee workload | ✅ Complete |
 | 5-level priority with Critical indicator | ✅ Complete |
 | Glassmorphism UI | ✅ Complete |
+| AI natural language filtering | ✅ Complete |
+| Merge import — no duplicates on re-import | 🔜 Planned |
 | Excel Online two-way sync | 🔜 Planned |
 | Role-based views (team lead vs member) | 🔜 Planned |
 | Email digest / weekly report export | 🔜 Planned |
+| Migrate AI to Azure OpenAI | 🔜 Planned |
 
 ---
 
@@ -239,6 +254,7 @@ This project was built as a complete business analyst portfolio piece demonstrat
 - **Stakeholder communication** — translating business needs into technical requirements
 - **End-to-end delivery** — from problem statement to deployed product
 - **Technical implementation** — React, Vite, SheetJS, GitHub Actions CI/CD
+- **AI integration** — natural language querying via Anthropic Claude API
 
 ---
 
