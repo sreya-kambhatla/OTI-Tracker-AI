@@ -10,6 +10,7 @@ import WeeklyView from './components/WeeklyView';
 import WorkloadView from './components/WorkloadView';
 import ImportModal from './components/ImportModal';
 import Toast from './components/Toast';
+import AIQuery from './components/AIQuery';
 
 function App() {
   const [logs,    setLogs]    = React.useState(() => loadFromStorage() || []);
@@ -76,6 +77,7 @@ function App() {
 
           {tab === "otis" && (
             <div>
+              <AIQuery onApplyFilters={filters => setFilters(filters)} allLogs={logs} />
               <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
               <AddEntryForm onAdd={handleAdd} allLogs={logs} />
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"8px 0 4px" }}>
