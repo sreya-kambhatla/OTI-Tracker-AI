@@ -97,6 +97,19 @@ ${assigneeSummaries}`;
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   }
 
+  function formatMsg(text) {
+    return text
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/^### (.+)$/gm, '<div style="font-weight:700;font-size:13px;margin:8px 0 4px;color:var(--indigo)">$1</div>')
+      .replace(/^## (.+)$/gm, '<div style="font-weight:700;font-size:14px;margin:10px 0 4px;color:var(--text)">$1</div>')
+      .replace(/^# (.+)$/gm, '<div style="font-weight:700;font-size:15px;margin:10px 0 4px;color:var(--text)">$1</div>')
+      .replace(/^- (.+)$/gm, '<div style="padding-left:12px">• $1</div>')
+      .replace(/
+/g, "<br/>");
+  }
+
   const suggestions = [
     "Who hasn't logged this week?",
     "Which OTIs are critical?",
@@ -165,7 +178,7 @@ ${assigneeSummaries}`;
                   borderBottomLeftRadius: msg.role === "assistant" ? 4 : 12,
                   whiteSpace: "pre-wrap",
                 }}>
-                  {msg.text}
+                  <span dangerouslySetInnerHTML={{ __html: formatMsg(msg.text) }} />
                 </div>
               </div>
             ))}
