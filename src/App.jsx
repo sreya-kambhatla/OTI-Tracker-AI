@@ -10,7 +10,7 @@ import WeeklyView from './components/WeeklyView';
 import WorkloadView from './components/WorkloadView';
 import ImportModal from './components/ImportModal';
 import Toast from './components/Toast';
-import AIQuery from './components/AIQuery';
+import AIChat from './components/AIChat';
 import SettingsModal from './components/SettingsModal';
 
 function App() {
@@ -65,8 +65,6 @@ function App() {
       <div className="page-body">
         <div className="page-static">
           <Dashboard logs={filteredLogs} />
-
-          <AIQuery onApplyFilters={filters => setFilters(filters)} allLogs={logs} />
 
           <div className="tab-bar">
             {[
@@ -124,6 +122,7 @@ function App() {
       {showImport   && <ImportModal  onImport={handleImport} onClose={() => setShowImport(false)} />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      <AIChat logs={logs} />
     </div>
   );
 }
