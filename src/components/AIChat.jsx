@@ -98,18 +98,17 @@ ${assigneeSummaries}`;
   }
 
   function formatMsg(text) {
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
+    const lines = text.split("\n");
+    const html = lines.map(line => {
+      if (line.startsWith("### ")) return "<div style='font-weight:700;font-size:13px;margin:8px 0 4px;color:var(--indigo)'>" + line.slice(4) + "</div>";
+      if (line.startsWith("## "))  return "<div style='font-weight:700;font-size:14px;margin:10px 0 4px;color:var(--text)'>" + line.slice(3) + "</div>";
+      if (line.startsWith("# "))   return "<div style='font-weight:700;font-size:15px;margin:10px 0 4px;color:var(--text)'>" + line.slice(2) + "</div>";
+      if (line.startsWith("- "))   return "<div style='padding-left:12px'>&bull; " + line.slice(2) + "</div>";
+      return line + "<br/>";
+    }).join("");
+    return html
       .replace(/[*][*](.+?)[*][*]/g, "<strong>$1</strong>")
-      .replace(/[*](.+?)[*]/g, "<em>$1</em>")
-      .replace(/^### (.+)$/gm, "<div style='font-weight:700;font-size:13px;margin:8px 0 4px;color:var(--indigo)'>$1</div>")
-      .replace(/^## (.+)$/gm, "<div style='font-weight:700;font-size:14px;margin:10px 0 4px;color:var(--text)'>$1</div>")
-      .replace(/^# (.+)$/gm, "<div style='font-weight:700;font-size:15px;margin:10px 0 4px;color:var(--text)'>$1</div>")
-      .replace(/^[-] (.+)$/gm, "<div style='padding-left:12px'>&bull; $1</div>")
-      .replace(/
-/g, "<br/>");
+      .replace(/[*]([^*]+)[*]/g, "<em>$1</em>");
   }
 
   const suggestions = [
