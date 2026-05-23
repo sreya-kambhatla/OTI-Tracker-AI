@@ -1,5 +1,6 @@
 import React from 'react';
 
+
 function AIQuery({ onApplyFilters, allLogs }) {
   const [query,   setQuery]   = React.useState("");
   const [loading, setLoading] = React.useState(false);
