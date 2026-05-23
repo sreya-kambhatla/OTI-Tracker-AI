@@ -99,13 +99,15 @@ ${assigneeSummaries}`;
 
   function formatMsg(text) {
     return text
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/^### (.+)$/gm, '<div style="font-weight:700;font-size:13px;margin:8px 0 4px;color:var(--indigo)">$1</div>')
-      .replace(/^## (.+)$/gm, '<div style="font-weight:700;font-size:14px;margin:10px 0 4px;color:var(--text)">$1</div>')
-      .replace(/^# (.+)$/gm, '<div style="font-weight:700;font-size:15px;margin:10px 0 4px;color:var(--text)">$1</div>')
-      .replace(/^- (.+)$/gm, '<div style="padding-left:12px">• $1</div>')
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/[*][*](.+?)[*][*]/g, "<strong>$1</strong>")
+      .replace(/[*](.+?)[*]/g, "<em>$1</em>")
+      .replace(/^### (.+)$/gm, "<div style='font-weight:700;font-size:13px;margin:8px 0 4px;color:var(--indigo)'>$1</div>")
+      .replace(/^## (.+)$/gm, "<div style='font-weight:700;font-size:14px;margin:10px 0 4px;color:var(--text)'>$1</div>")
+      .replace(/^# (.+)$/gm, "<div style='font-weight:700;font-size:15px;margin:10px 0 4px;color:var(--text)'>$1</div>")
+      .replace(/^[-] (.+)$/gm, "<div style='padding-left:12px'>&bull; $1</div>")
       .replace(/
 /g, "<br/>");
   }
