@@ -23,7 +23,7 @@ A web-based dashboard that:
 - Provides real-time summary metrics with animated flip cards
 - Visualises workload by OTI, by week, and by assignee
 - Allows inline editing, status updates, and log entry without leaving the browser
-- Designed to support natural language querying via AI to filter data without using dropdowns *(in development)*
+- AI assistant powered by Claude answers natural language questions about your team's data
 - Persists data locally and exports back to CSV for stakeholders who prefer spreadsheets
 
 ---
@@ -55,7 +55,7 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 | R08 | Persist data between sessions | Should Have |
 | R09 | Critical priority visual indicator | Could Have |
 | R10 | Glassmorphism UI with dark theme | Could Have |
-| R11 | Natural language AI filtering | Could Have |
+| R11 | AI natural language assistant | Could Have |
 
 ---
 
@@ -65,22 +65,23 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 - **4 flip cards** — In Progress, Completed, Blocked, Team Overview. Click any card to reveal the full list of OTIs or team members
 - **Animated metrics** — numbers count up on load for a polished feel
 
-### AI-Powered Filtering *(In Development)*
-- **Natural language queries** — designed to support queries like "show critical OTIs" or "who hasn't logged this week?" instead of using dropdowns
-- **Architecture ready** — built to connect to an AI API (Anthropic Claude or Azure OpenAI) to interpret queries and apply filters automatically
-- **Suggestion chips** — quick-access prompts for common team lead queries
-- **Enterprise path** — designed to migrate to Azure OpenAI to stay within Microsoft's ecosystem
+### AI Assistant
+- **Floating chat button** — accessible from all tabs, never in the way
+- **Conversational responses** — powered by Claude, reads your actual OTI and team data
+- **Ask anything** — "Who hasn't logged this week?", "Who is most overloaded?", "Summarise OTI-XXXXX", "Generate standup notes"
+- **Chat history** — follow-up questions supported within a session
+- **Secure backend** — API key stored on Vercel serverless function, never exposed in the browser
+- **Markdown rendering** — responses render with proper bold, headings, and bullet points
 
 ### OTI Management
 - **OTI cards** — each card shows total hours, days logged, average per day, assignee, and last logged date
-- **Inline editing** — click the edit icon on any log row to edit in place
-- **Quick status change** — change OTI status directly from the card without opening logs
+- **Inline editing** — click the edit icon on any log row to update in place
+- **Quick status change** — change an OTI status directly from the card without opening logs
 - **Delete confirmation** — custom modal prevents accidental deletions
 - **Notes field** — optional notes per log entry for blockers or progress updates
 
 ### Filtering & Search
-- Natural language AI queries
-- Search by OTI ID, title, or assignee
+- Search by OTI ID, title, or assignee name
 - Filter by status, priority, assignee, year, and month
 - Sort by last logged, most hours, or least hours
 - Active filter count badge
@@ -88,21 +89,21 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 ### Data Import / Export
 - **Import** — drag and drop or browse for `.xlsx`, `.xls`, or `.csv`
 - **Smart column mapping** — recognises common column name variations automatically
-- **Warning system** — flags rows with data issues without skipping them
+- **Warning system** — flags rows with data issues without skipping them — no data loss
 - **Export** — downloads current filtered view as a timestamped CSV
 
 ### Views
 - **OTIs tab** — all active OTIs sorted by last logged
 - **Weekly summary** — logs grouped by work week with month filter
-- **Assignee workload** — per-person breakdown showing OTIs, status, days worked, and last logged
+- **Assignee workload** — per-person table showing OTIs, status, days worked, and last logged
 
 ### Priority Levels
 | Level | Colour | Indicator |
 |-------|--------|-----------|
-| Low | Green | — |
-| Medium | Amber | — |
-| High | Red | — |
-| XXL | Orange-red | — |
+| Low | Green | Standard badge |
+| Medium | Amber | Standard badge |
+| High | Red | Standard badge |
+| XXL | Orange-red | Standard badge |
 | Critical | Deep red | Pulsing badge |
 
 ---
@@ -115,7 +116,8 @@ Team lead sees summary cards, weekly trends, and assignee workload instantly
 | Build tool | Vite 4 |
 | Styling | Custom CSS with CSS variables + glassmorphism |
 | Excel parsing | SheetJS (xlsx) |
-| AI filtering | Anthropic Claude API *(in development)* |
+| AI assistant | Anthropic Claude API (claude-sonnet-4-5) |
+| AI proxy | Vercel serverless function |
 | Data persistence | localStorage |
 | Deployment | GitHub Pages via GitHub Actions |
 | CI/CD | GitHub Actions (auto-deploy on push to main) |
@@ -133,24 +135,47 @@ OTI-Tracker-AI/
 │   ├── App.jsx                 # Root component and state management
 │   ├── constants.js            # All config values, options, default states
 │   ├── utils.js                # All utility functions (calc, filter, storage, export)
-│   ├── index.css               # Global styles with CSS variables
+│   ├── index.css               # Global styles with CSS variables + glassmorphism
 │   ├── main.jsx                # React entry point
 │   └── components/
 │       ├── TopBar.jsx          # Fixed navigation header
 │       ├── Dashboard.jsx       # Overview metrics and flip cards
-│       ├── AIQuery.jsx         # Natural language AI filter input
+│       ├── AIChat.jsx          # Floating AI assistant chat panel
 │       ├── Filters.jsx         # Search and filter controls
 │       ├── AddEntryForm.jsx    # Collapsible log entry form
 │       ├── OTICard.jsx         # Individual OTI card with inline edit
 │       ├── WeeklyView.jsx      # Weekly grouped summary table
 │       ├── WorkloadView.jsx    # Per-assignee workload table
 │       ├── ImportModal.jsx     # Two-stage CSV/Excel import flow
+│       ├── SettingsModal.jsx   # API key configuration
 │       └── Toast.jsx           # Auto-dismissing notification
 ├── index.html
 ├── package.json
 ├── sample_data.csv             # Demo dataset for testing
 └── vite.config.js
 ```
+
+---
+
+## 🏗 Architecture
+
+```
+Browser (GitHub Pages)
+        │
+        │ User asks AI question
+        ▼
+Vercel Serverless Function (oti-proxy)
+        │
+        │ Forwards request with API key
+        ▼
+Anthropic Claude API
+        │
+        │ Returns conversational response
+        ▼
+Dashboard renders formatted answer
+```
+
+The Vercel proxy keeps the API key secure — it never touches the browser.
 
 ---
 
@@ -236,7 +261,8 @@ A dummy dataset (`sample_data.csv`) is included in the repo to demo the dashboar
 | Weekly summary + assignee workload | ✅ Complete |
 | 5-level priority with Critical indicator | ✅ Complete |
 | Glassmorphism UI | ✅ Complete |
-| AI natural language filtering | 🚧 In Development |
+| AI natural language assistant | ✅ Complete |
+| Secure Vercel proxy for AI | ✅ Complete |
 | Merge import — no duplicates on re-import | 🔜 Planned |
 | Excel Online two-way sync | 🔜 Planned |
 | Role-based views (team lead vs member) | 🔜 Planned |
@@ -254,8 +280,8 @@ This project was built as a complete business analyst portfolio piece demonstrat
 - **Stakeholder communication** — translating business needs into technical requirements
 - **End-to-end delivery** — from problem statement to deployed product
 - **Technical implementation** — React, Vite, SheetJS, GitHub Actions CI/CD
-- **AI integration** — designed and architected natural language querying feature using Anthropic Claude API
+- **AI integration** — conversational AI assistant via Anthropic Claude API with secure Vercel proxy
 
 ---
 
-*Built with React + Vite. Deployed on GitHub Pages.*
+*Built with React + Vite. Deployed on GitHub Pages. AI powered by Claude.*
