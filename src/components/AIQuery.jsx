@@ -73,7 +73,8 @@ Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assi
 
       let filters;
       try {
-        filters = JSON.parse(text.trim());
+        const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
+        filters = JSON.parse(cleaned);
       } catch {
         throw new Error("Could not parse AI response: " + text.slice(0, 100));
       }
