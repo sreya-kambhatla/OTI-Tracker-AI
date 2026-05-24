@@ -46,6 +46,10 @@ function AIChat({ logs }) {
 
     return `You are an AI assistant for a team OTI tracking dashboard. Answer questions conversationally and helpfully based on the data below. Be specific with names, numbers and dates. Today is ${today}. This week started ${weekStart}.
 
+After every response, add exactly this block on a new line at the very end — no exceptions:
+SUGGESTIONS:["suggestion 1","suggestion 2","suggestion 3"]
+Make the suggestions short (under 6 words each), relevant to what was just discussed, and genuinely useful follow-up questions the user would want to ask next. Never include the SUGGESTIONS block in the middle of your answer, only at the very end.
+
 OTI SUMMARY (${otiIds.length} OTIs):
 ${otiSummaries}
 
@@ -53,9 +57,9 @@ ASSIGNEE SUMMARY (${assignees.length} team members):
 ${assigneeSummaries}`;
   }
 
-  async function handleSend() {
-    if (!input.trim() || loading) return;
-    const userMsg = input.trim();
+  async function handleSend(overrideMsg) {
+    const userMsg = (typeof overrideMsg === "string" ? overrideMsg : input).trim();
+    if (!userMsg || loading) return;
     setInput("");
     setMessages(prev => [...prev, { role: "user", text: userMsg }]);
     setLoading(true);
@@ -84,8 +88,20 @@ ${assigneeSummaries}`;
       }
 
       const data = await response.json();
-      const text = data.content?.[0]?.text || "Sorry, I couldn't get a response.";
-      setMessages(prev => [...prev, { role: "assistant", text }]);
+      const raw  = data.content?.[0]?.text || "Sorry, I couldn't get a response.";
+
+      // Extract suggestions from end of response
+      let text = raw;
+      let suggestions = [];
+      const sugMatch = raw.match(/SUGGESTIONS:\[([^\]]+)\]\s*$/);
+      if (sugMatch) {
+        try {
+          suggestions = JSON.parse("[" + sugMatch[1] + "]");
+        } catch {}
+        text = raw.slice(0, sugMatch.index).trim();
+      }
+
+      setMessages(prev => [...prev, { role: "assistant", text, suggestions }]);
     } catch (err) {
       setMessages(prev => [...prev, { role: "assistant", text: "Sorry, something went wrong: " + err.message }]);
     } finally {
@@ -238,6 +254,23 @@ ${assigneeSummaries}`;
                   whiteSpace: "pre-wrap",
                 }}>
                   <span dangerouslySetInnerHTML={{ __html: formatMsg(msg.text) }} />
+                  {msg.suggestions && msg.suggestions.length > 0 && (
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginTop:10 }}>
+                      {msg.suggestions.map((s, si) => (
+                        <button key={si} onClick={() => handleSend(s)}
+                          style={{
+                            fontSize:11, padding:"4px 10px", borderRadius:20,
+                            border:"1px solid rgba(99,102,241,0.4)",
+                            background:"rgba(99,102,241,0.12)",
+                            color:"var(--indigo)", cursor:"pointer",
+                            transition:"background 0.15s",
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background="rgba(99,102,241,0.25)"}
+                          onMouseLeave={e => e.currentTarget.style.background="rgba(99,102,241,0.12)"}
+                        >{s}</button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
