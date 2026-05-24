@@ -61,9 +61,14 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
           result = parseCSV(e.target.result);
         }
         if (result.error) { setError(result.error); return; }
-        setDiff(computeDiff(result));
-        setStage("preview");
-        setError("");
+        try {
+          const d = computeDiff(result);
+          setDiff(d);
+          setStage("preview");
+          setError("");
+        } catch(diffErr) {
+          setError("Error processing file: " + diffErr.message);
+        }
       } catch(err) {
         setError("Could not read file: " + err.message);
       }
@@ -102,7 +107,7 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ width:680, maxHeight:"88vh", display:"flex", flexDirection:"column" }}
+      <div className="modal" style={{ width:640, maxWidth:"92vw", maxHeight:"85vh", display:"flex", flexDirection:"column", overflow:"hidden" }}
            onClick={e => e.stopPropagation()}>
 
         {/* ── UPLOAD STAGE ── */}
