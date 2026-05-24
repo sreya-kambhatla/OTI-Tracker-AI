@@ -162,7 +162,7 @@ export function parseExcelJSON(json) {
     const title     = get("title");
     const createdBy = get("createdBy");
     const assignee  = get("assignee");
-    const date      = get("date");
+    const date      = normaliseDate(get("date"));
     const startTime = get("startTime") || "09:00";
     const endTime   = get("endTime")   || "17:00";
     const notes     = get("notes")     || "";
@@ -213,6 +213,25 @@ function parseCSVRow(raw) {
   return cols;
 }
 
+function normaliseDate(raw) {
+  if (!raw) return "";
+  const s = String(raw).trim();
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // M/D/YYYY or MM/DD/YYYY
+  const slash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slash) {
+    const [, m, d, y] = slash;
+    return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+  }
+  // D/M/YYYY fallback — try JS Date
+  try {
+    const dt = new Date(s);
+    if (!isNaN(dt)) return dt.toISOString().slice(0,10);
+  } catch {}
+  return s;
+}
+
 export function parseCSV(text) {
   const lines = text.trim().split("\n").filter(Boolean);
   if (lines.length < 2) return { error: "File is empty or has no data rows." };
@@ -254,7 +273,7 @@ export function parseCSV(text) {
     const title     = get("title");
     const createdBy = get("createdBy");
     const assignee  = get("assignee");
-    const date      = get("date");
+    const date      = normaliseDate(get("date"));
     const startTime = get("startTime") || "09:00";
     const endTime   = get("endTime")   || "17:00";
     const rawStatus = (get("status") || "").toLowerCase().replace(/\s/g,"");
