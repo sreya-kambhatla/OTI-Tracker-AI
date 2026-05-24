@@ -200,11 +200,24 @@ export function parseExcelJSON(json) {
   return { logs, errors };
 }
 
+function parseCSVRow(raw) {
+  const cols = [];
+  let cur = "", inQuote = false;
+  for (let ci = 0; ci < raw.length; ci++) {
+    const ch = raw[ci];
+    if (ch === '"') { inQuote = !inQuote; }
+    else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = ""; }
+    else { cur += ch; }
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
 export function parseCSV(text) {
   const lines = text.trim().split("\n").filter(Boolean);
   if (lines.length < 2) return { error: "File is empty or has no data rows." };
 
-  const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
+  const headers = parseCSVRow(lines[0]).map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
 
   const colMap = {
     otiid:      ["oti id","otiid","oti_id","ticket","ticket id"],
@@ -234,16 +247,7 @@ export function parseCSV(text) {
 
   for (let i = 1; i < lines.length; i++) {
     const raw  = lines[i];
-    // Proper CSV row parser — handles quoted fields with commas inside
-    const cols = [];
-    let cur = "", inQuote = false;
-    for (let c = 0; c < raw.length; c++) {
-      const ch = raw[c];
-      if (ch === '"') { inQuote = !inQuote; }
-      else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = ""; }
-      else { cur += ch; }
-    }
-    cols.push(cur.trim());
+    const cols = parseCSVRow(raw);
     const get  = (field) => idx[field] !== -1 ? (cols[idx[field]] || "").replace(/^"|"$/g,"").trim() : "";
 
     const otiId     = get("otiid");
