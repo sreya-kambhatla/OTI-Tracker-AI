@@ -50,11 +50,20 @@ function App() {
       setLogs(importedLogs);
       setToast(`Imported ${importedLogs.length} entries successfully`);
     } else {
-      // Merge — skip duplicates using otiId + date + assignee as unique key
+      // Split into new (no existing key) and updates (existing key)
       const existingKeys = new Set(logs.map(l => `${l.otiId}|${l.date}|${l.assignee}`));
-      const newLogs = importedLogs.filter(l => !existingKeys.has(`${l.otiId}|${l.date}|${l.assignee}`));
-      setLogs(prev => [...prev, ...newLogs]);
-      setToast(`Merged: ${newLogs.length} new entries added, ${importedLogs.length - newLogs.length} duplicates skipped`);
+      const toAdd    = importedLogs.filter(l => !existingKeys.has(`${l.otiId}|${l.date}|${l.assignee}`));
+      const toUpdate = importedLogs.filter(l =>  existingKeys.has(`${l.otiId}|${l.date}|${l.assignee}`));
+
+      setLogs(prev => {
+        // Replace changed rows, then append new ones
+        const updated = prev.map(existing => {
+          const match = toUpdate.find(u => `${u.otiId}|${u.date}|${u.assignee}` === `${existing.otiId}|${existing.date}|${existing.assignee}`);
+          return match ? { ...existing, ...match, id: existing.id } : existing;
+        });
+        return [...updated, ...toAdd];
+      });
+      setToast(`Merged: ${toAdd.length} added, ${toUpdate.length} updated, duplicates skipped`);
     }
   }
   function handleDelete(id)               { setLogs(p => p.filter(l => l.id !== id)); setToast("Entry deleted"); }
