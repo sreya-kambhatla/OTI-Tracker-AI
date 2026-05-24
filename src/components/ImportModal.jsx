@@ -3,26 +3,22 @@ import * as XLSX from 'xlsx';
 import { parseCSV, parseExcelJSON, downloadTemplate, statusStyle } from '../utils';
 
 function ImportModal({ onImport, existingLogs = [], onClose }) {
-  const [stage,    setStage]    = React.useState("upload");
-  const [diff,     setDiff]     = React.useState(null);
-  const [error,    setError]    = React.useState("");
-  const [dragging, setDragging] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState("all");
-  const [showUnchanged, setShowUnchanged] = React.useState(false);
+  const [stage,        setStage]        = React.useState("upload");
+  const [diff,         setDiff]         = React.useState(null);
+  const [error,        setError]        = React.useState("");
+  const [dragging,     setDragging]     = React.useState(false);
+  const [activeTab,    setActiveTab]    = React.useState("all");
+  const [showUnchanged,setShowUnchanged]= React.useState(false);
+  const [expandedRows, setExpandedRows] = React.useState(new Set());
   const fileRef = React.useRef();
 
   function computeDiff(incoming) {
     const existingMap = {};
-    existingLogs.forEach(l => {
-      existingMap[`${l.otiId}|${l.date}|${l.assignee}`] = l;
-    });
+    existingLogs.forEach(l => { existingMap[`${l.otiId}|${l.date}|${l.assignee}`] = l; });
     const incomingMap = {};
-    incoming.logs.forEach(r => {
-      incomingMap[`${r.otiId}|${r.date}|${r.assignee}`] = r;
-    });
+    incoming.logs.forEach(r => { incomingMap[`${r.otiId}|${r.date}|${r.assignee}`] = r; });
 
     const rows = [];
-
     incoming.logs.forEach(row => {
       const key = `${row.otiId}|${row.date}|${row.assignee}`;
       const existing = existingMap[key];
@@ -35,27 +31,26 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
         if (existing.priority      !== row.priority)      cf.push("priority");
         if ((existing.notes||"")   !== (row.notes||""))   cf.push("notes");
         if (existing.title         !== row.title)         cf.push("title");
+        if (existing.assignee      !== row.assignee)      cf.push("assignee");
         rows.push(cf.length > 0
           ? { type:"changed",   old:existing, new:row, changedFields:cf }
           : { type:"unchanged", old:existing, new:row, changedFields:[] }
         );
       }
     });
-
     existingLogs.forEach(l => {
-      const key = `${l.otiId}|${l.date}|${l.assignee}`;
-      if (!incomingMap[key]) rows.push({ type:"deleted", old:l, new:null, changedFields:[] });
+      if (!incomingMap[`${l.otiId}|${l.date}|${l.assignee}`])
+        rows.push({ type:"deleted", old:l, new:null, changedFields:[] });
     });
 
     const order = { changed:0, added:1, deleted:2, unchanged:3 };
     rows.sort((a,b) => order[a.type] - order[b.type]);
-
     return {
       rows,
-      added:     rows.filter(r => r.type==="added").length,
-      changed:   rows.filter(r => r.type==="changed").length,
-      deleted:   rows.filter(r => r.type==="deleted").length,
-      unchanged: rows.filter(r => r.type==="unchanged").length,
+      added:     rows.filter(r=>r.type==="added").length,
+      changed:   rows.filter(r=>r.type==="changed").length,
+      deleted:   rows.filter(r=>r.type==="deleted").length,
+      unchanged: rows.filter(r=>r.type==="unchanged").length,
       warnings:  incoming.errors,
     };
   }
@@ -83,109 +78,171 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
           setDiff(d);
           setActiveTab("all");
           setShowUnchanged(false);
+          setExpandedRows(new Set());
           setStage("preview");
           setError("");
-        } catch(diffErr) { setError("Error processing file: " + diffErr.message); }
+        } catch(de) { setError("Error processing file: " + de.message); }
       } catch(err) { setError("Could not read file: " + err.message); }
     };
     isExcel ? reader.readAsArrayBuffer(file) : reader.readAsText(file);
   }
 
-  function handleDrop(e) {
-    e.preventDefault(); setDragging(false);
-    handleFile(e.dataTransfer.files[0]);
-  }
+  function handleDrop(e) { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }
 
   function handleConfirm() {
-    const toAdd    = diff.rows.filter(r => r.type==="added").map(r => r.new);
-    const toUpdate = diff.rows.filter(r => r.type==="changed").map(r => r.new);
-    onImport([...toAdd, ...toUpdate], "merge");
+    const toAdd    = diff.rows.filter(r=>r.type==="added").map(r=>r.new);
+    const toUpdate = diff.rows.filter(r=>r.type==="changed").map(r=>r.new);
+    onImport([...toAdd,...toUpdate], "merge");
     onClose();
+  }
+
+  function toggleExpand(i) {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
   }
 
   const isFirstImport = existingLogs.length === 0;
   const EMPTY = "—";
 
-  // ── row/cell helpers ─────────────────────────────────────────────
-  const rowBorderLeft = (type) =>
-    type==="added"    ? "3px solid #10b981" :
-    type==="changed"  ? "3px solid #f59e0b" :
-    type==="deleted"  ? "3px solid #ef4444" :
-                        "3px solid transparent";
+  const rowBorderLeft = t =>
+    t==="added"?"3px solid #10b981":t==="changed"?"3px solid #f59e0b":
+    t==="deleted"?"3px solid #ef4444":"3px solid transparent";
+  const rowBg = t =>
+    t==="added"?"rgba(16,185,129,0.05)":t==="changed"?"rgba(245,158,11,0.05)":
+    t==="deleted"?"rgba(239,68,68,0.05)":"transparent";
 
-  const rowBg = (type) =>
-    type==="added"    ? "rgba(16,185,129,0.05)"  :
-    type==="changed"  ? "rgba(245,158,11,0.05)"  :
-    type==="deleted"  ? "rgba(239,68,68,0.05)"   :
-                        "transparent";
+  // All fields for expanded detail view
+  const ALL_FIELDS = [
+    { key:"otiId",     label:"OTI ID"     },
+    { key:"title",     label:"Title"      },
+    { key:"assignee",  label:"Assignee"   },
+    { key:"date",      label:"Date"       },
+    { key:"status",    label:"Status"     },
+    { key:"priority",  label:"Priority"   },
+    { key:"hours",     label:"Hours"      },
+    { key:"startTime", label:"Start"      },
+    { key:"endTime",   label:"End"        },
+    { key:"notes",     label:"Notes"      },
+  ];
 
-  // ── filtered rows ────────────────────────────────────────────────
-  function getVisibleRows() {
-    if (!diff) return [];
-    let rows = diff.rows;
-    if (activeTab !== "all") rows = rows.filter(r => r.type === activeTab);
-    if (activeTab === "all" && !showUnchanged) {
-      const important = rows.filter(r => r.type !== "unchanged");
-      const unchanged = rows.filter(r => r.type === "unchanged");
-      return { important, unchanged, collapsed: !showUnchanged };
+  // Smart columns for changed rows — always show OTI ID + Date + changed fields
+  function getSmartCols(row) {
+    const base = ["otiId","date"];
+    if (row.type === "changed") {
+      const extras = row.changedFields.filter(f => !base.includes(f));
+      return [...base, ...extras];
     }
-    return { important: rows, unchanged: [], collapsed: false };
+    return [...base, "hours","status"];
   }
 
-  function DiffRow({ row }) {
-    const o  = row.old;
-    const n  = row.new;
-    const cf = row.changedFields || [];
-
-    const cellSt = { padding:"7px 10px", fontSize:12 };
-    const divider = { borderRight:"2px solid var(--border2)" };
-
-    function Val({ field, oldVal, newVal, isRight }) {
-      const changed = cf.includes(field);
-      if (isRight) {
-        if (newVal === null || newVal === undefined) return <td style={cellSt}><span style={{ color:"var(--text3)" }}>{EMPTY}</span></td>;
-        if (changed) return (
-          <td style={cellSt}>
-            <span style={{ textDecoration:"line-through", color:"var(--text3)", marginRight:5, fontSize:11 }}>{oldVal}{field==="hours"?"h":""}</span>
-            <span style={{ color:"#fbbf24", fontWeight:600 }}>{newVal}{field==="hours"?"h":""}</span>
-          </td>
-        );
-        return <td style={cellSt}>{field==="hours" ? `${newVal}h` : newVal}</td>;
-      } else {
-        if (oldVal === null || oldVal === undefined) return <td style={{...cellSt, color:"var(--text3)"}}>{EMPTY}</td>;
-        return <td style={{...cellSt, color: changed ? "var(--text3)" : "var(--text)"}}>{field==="hours" ? `${oldVal}h` : oldVal}</td>;
-      }
+  function FieldVal({ val, isChanged, oldVal, field }) {
+    if (val === null || val === undefined || val === "") return <span style={{ color:"var(--text3)" }}>{EMPTY}</span>;
+    const display = field === "hours" ? `${val}h` : val;
+    if (isChanged && oldVal !== undefined && String(oldVal) !== String(val)) {
+      const oldDisplay = field === "hours" ? `${oldVal}h` : oldVal;
+      return (
+        <span>
+          <span style={{ textDecoration:"line-through", color:"var(--text3)", marginRight:4, fontSize:11 }}>{oldDisplay}</span>
+          <span style={{ color:"#fbbf24", fontWeight:600 }}>{display}</span>
+        </span>
+      );
     }
+    if (field === "status") return <span className="badge" style={statusStyle(val)}>{val}</span>;
+    return <span>{display}</span>;
+  }
+
+  function DiffRow({ row, idx }) {
+    const o   = row.old;
+    const n   = row.new;
+    const cf  = row.changedFields || [];
+    const exp = expandedRows.has(idx);
+    const smartCols = getSmartCols(row);
+    const cs  = { padding:"7px 10px", fontSize:12 };
 
     return (
-      <tr style={{ background:rowBg(row.type), borderLeft:rowBorderLeft(row.type),
-                   borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-        {/* Left side */}
-        <td style={{...cellSt, color:"var(--indigo)", fontWeight:600}}>{o ? o.otiId : <span style={{color:"var(--text3)"}}>{EMPTY}</span>}</td>
-        <td style={{...cellSt, color:"var(--text2)"}}>{o ? o.date : <span style={{color:"var(--text3)"}}>{EMPTY}</span>}</td>
-        <Val field="hours"  oldVal={o?.hours}  newVal={n?.hours}  isRight={false}/>
-        <td style={{...cellSt,...divider}}>
-          {o ? <span className="badge" style={statusStyle(o.status)}>{o.status}</span>
-             : <span style={{color:"var(--text3)"}}>{EMPTY}</span>}
-        </td>
-        {/* Right side */}
-        <td style={{...cellSt, color:"var(--indigo)", fontWeight:600}}>{n ? n.otiId : <span style={{color:"var(--text3)"}}>{EMPTY}</span>}</td>
-        <td style={{...cellSt, color:"var(--text2)"}}>{n ? n.date : <span style={{color:"var(--text3)"}}>{EMPTY}</span>}</td>
-        <Val field="hours"  oldVal={o?.hours}  newVal={n?.hours}  isRight={true}/>
-        <td style={cellSt}>
-          {n ? (cf.includes("status") ? (
-            <span>
-              <span style={{textDecoration:"line-through",color:"var(--text3)",marginRight:4,fontSize:11}}>{o.status}</span>
-              <span className="badge" style={statusStyle(n.status)}>{n.status}</span>
-            </span>
-          ) : <span className="badge" style={statusStyle(n.status)}>{n.status}</span>)
-          : <span style={{color:"var(--text3)"}}>{EMPTY}</span>}
-        </td>
-      </tr>
+      <>
+        <tr style={{ background:rowBg(row.type), borderLeft:rowBorderLeft(row.type),
+                     borderBottom: exp ? "none" : "1px solid rgba(255,255,255,0.04)",
+                     cursor:"pointer" }}
+            onClick={() => toggleExpand(idx)}>
+
+          {/* Expand arrow */}
+          <td style={{ ...cs, width:28, color:"var(--text3)", fontSize:10, userSelect:"none" }}>
+            {exp ? "▼" : "▶"}
+          </td>
+
+          {/* Smart columns — left (existing) */}
+          {smartCols.map((f,i) => (
+            <td key={"l"+f} style={{ ...cs, color: f==="otiId" ? "var(--indigo)" : "var(--text2)",
+              fontWeight: f==="otiId" ? 600 : 400,
+              borderRight: i===smartCols.length-1 ? "2px solid var(--border2)" : "none" }}>
+              {o ? (f==="status"
+                ? <span className="badge" style={statusStyle(o[f])}>{o[f]}</span>
+                : f==="hours" ? `${o[f]}h` : o[f] || EMPTY)
+              : <span style={{ color:"var(--text3)" }}>{EMPTY}</span>}
+            </td>
+          ))}
+
+          {/* Smart columns — right (incoming) */}
+          {smartCols.map(f => (
+            <td key={"r"+f} style={{ ...cs }}>
+              {n
+                ? <FieldVal val={n[f]} oldVal={o?.[f]} isChanged={cf.includes(f)} field={f}/>
+                : <span style={{ color:"var(--text3)" }}>{EMPTY}</span>}
+            </td>
+          ))}
+        </tr>
+
+        {/* Expanded detail panel — all fields */}
+        {exp && (
+          <tr style={{ background: rowBg(row.type), borderLeft:rowBorderLeft(row.type),
+                       borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+            <td></td>
+            <td colSpan={smartCols.length * 2 + 1} style={{ padding:"0 10px 12px" }}>
+              <div style={{ background:"rgba(0,0,0,0.2)", borderRadius:8, padding:"10px 14px",
+                            display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:"8px 16px" }}>
+                {ALL_FIELDS.map(({ key, label }) => {
+                  const oldV = o?.[key];
+                  const newV = n?.[key];
+                  const changed = cf.includes(key);
+                  return (
+                    <div key={key}>
+                      <div style={{ fontSize:10, color:"var(--text3)", fontWeight:600,
+                        textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:2 }}>
+                        {label}
+                        {changed && <span style={{ color:"#f59e0b", marginLeft:4 }}>✎</span>}
+                      </div>
+                      <div style={{ fontSize:12 }}>
+                        {/* Left value */}
+                        <span style={{ color:"var(--text3)", fontSize:11 }}>
+                          {oldV !== null && oldV !== undefined && oldV !== ""
+                            ? (key==="hours" ? `${oldV}h` : oldV) : EMPTY}
+                        </span>
+                        {changed && (
+                          <span style={{ color:"var(--text3)", margin:"0 6px" }}>→</span>
+                        )}
+                        {/* Right value — only show if different */}
+                        {changed && (
+                          <span style={{ color:"#fbbf24", fontWeight:600, fontSize:12 }}>
+                            {newV !== null && newV !== undefined && newV !== ""
+                              ? (key==="hours" ? `${newV}h` : newV) : EMPTY}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </td>
+          </tr>
+        )}
+      </>
     );
   }
 
-  // ── tab pill ─────────────────────────────────────────────────────
   function TabPill({ id, count, color, label }) {
     const active = activeTab === id;
     return (
@@ -196,12 +253,44 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
         color: active ? color : "var(--text3)",
         cursor:"pointer", transition:"all 0.15s",
       }}>
-        {label} {count > 0 && <span style={{opacity:0.8}}>({count})</span>}
+        {label} {count > 0 && <span style={{ opacity:0.8 }}>({count})</span>}
       </button>
     );
   }
 
-  const visible = diff ? getVisibleRows() : { important:[], unchanged:[], collapsed:false };
+  function LegendPill({ color, label }) {
+    return (
+      <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20,
+        border:`1.5px solid ${color}`, background:`${color}22`, color:color }}>
+        {label}
+      </span>
+    );
+  }
+
+  // Compute visible rows based on active tab
+  const visibleRows = React.useMemo(() => {
+    if (!diff) return { important:[], unchanged:[] };
+    let rows = activeTab === "all" ? diff.rows : diff.rows.filter(r => r.type === activeTab);
+    if (activeTab === "all") {
+      return {
+        important: rows.filter(r => r.type !== "unchanged"),
+        unchanged: rows.filter(r => r.type === "unchanged"),
+      };
+    }
+    return { important: rows, unchanged: [] };
+  }, [diff, activeTab]);
+
+  // Dynamic column headers based on first important row's smart cols
+  const smartColHeaders = React.useMemo(() => {
+    if (!diff || visibleRows.important.length === 0) return ["OTI ID","Date","Hours","Status"];
+    const firstChanged = diff.rows.find(r => r.type === "changed");
+    if (firstChanged) {
+      return getSmartCols(firstChanged).map(f =>
+        ALL_FIELDS.find(a => a.key === f)?.label || f
+      );
+    }
+    return ["OTI ID","Date","Hours","Status"];
+  }, [diff, visibleRows]);
 
   return (
     <div className="modal-overlay">
@@ -217,15 +306,15 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
             <p style={{ marginBottom:16, color:"var(--text2)", fontSize:13 }}>
               {isFirstImport
                 ? "Upload your Excel or CSV file to get started."
-                : "Upload a file — a side-by-side diff will show exactly what will change before anything is applied."}
+                : "Upload a file — a side-by-side diff shows exactly what will change before anything is applied."}
               {" "}<span style={{ color:"var(--indigo)", cursor:"pointer", textDecoration:"underline" }}
                 onClick={downloadTemplate}>Download template</span>
             </p>
             <div
-              onDragOver={e => { e.preventDefault(); setDragging(true); }}
-              onDragLeave={() => setDragging(false)}
+              onDragOver={e=>{ e.preventDefault(); setDragging(true); }}
+              onDragLeave={()=>setDragging(false)}
               onDrop={handleDrop}
-              onClick={() => fileRef.current.click()}
+              onClick={()=>fileRef.current.click()}
               style={{
                 border:"2px dashed "+(dragging?"var(--indigo)":"var(--border2)"),
                 borderRadius:12, padding:"2.5rem 2rem", textAlign:"center",
@@ -239,7 +328,7 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
               </div>
               <div style={{ fontSize:12, color:"var(--text3)" }}>Supports .xlsx, .xls, and .csv</div>
               <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" style={{ display:"none" }}
-                     onChange={e => handleFile(e.target.files[0])} />
+                     onChange={e=>handleFile(e.target.files[0])} />
             </div>
             {error && <div style={{ fontSize:12, color:"var(--red)", marginBottom:16 }}>{error}</div>}
             <div style={{ display:"flex", justifyContent:"space-between" }}>
@@ -252,11 +341,10 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
         {/* ── DIFF STAGE ── */}
         {stage === "preview" && diff && (
           <>
-            {/* Header */}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
               <h3 style={{ margin:0 }}>{isFirstImport ? "Preview import" : "Review changes"}</h3>
-              <button onClick={onClose} style={{ background:"none", border:"none", color:"var(--text3)",
-                fontSize:18, cursor:"pointer", lineHeight:1 }}>✕</button>
+              <button onClick={onClose} style={{ background:"none", border:"none",
+                color:"var(--text3)", fontSize:18, cursor:"pointer" }}>✕</button>
             </div>
 
             {/* Filter tabs */}
@@ -268,72 +356,94 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
               <TabPill id="unchanged" count={diff.unchanged}   color="#6b7280" label="Unchanged"/>
             </div>
 
-            {/* Warnings */}
             {diff.warnings.length > 0 && (
               <div style={{ background:"rgba(245,158,11,0.08)", border:"1px solid rgba(245,158,11,0.3)",
                             borderRadius:8, padding:"8px 12px", marginBottom:10 }}>
                 <div style={{ fontSize:11, fontWeight:600, color:"var(--amber)" }}>
-                  ⚠ {diff.warnings.length} row{diff.warnings.length!==1?"s":""} need review before importing
+                  ⚠ {diff.warnings.length} row{diff.warnings.length!==1?"s":""} need review
                 </div>
               </div>
             )}
 
+            {/* Hint */}
+            <div style={{ fontSize:11, color:"var(--text3)", marginBottom:8 }}>
+              Click any row to expand all fields · Changed fields shown with old → new value
+            </div>
+
             {/* Table */}
-            <div style={{ flex:1, overflowY:"auto", borderRadius:8, border:"1px solid var(--border)", marginBottom:12 }}>
+            <div style={{ flex:1, overflowY:"auto", borderRadius:8,
+                          border:"1px solid var(--border)", marginBottom:12 }}>
               <table style={{ width:"100%", borderCollapse:"collapse" }}>
                 <thead style={{ position:"sticky", top:0, zIndex:10 }}>
                   <tr>
-                    <th colSpan={4} style={{ background:"rgba(99,102,241,0.1)", padding:"7px 10px",
-                      fontSize:10, fontWeight:700, color:"var(--text2)", letterSpacing:"0.08em",
-                      textTransform:"uppercase", textAlign:"left",
-                      borderBottom:"1px solid var(--border)", borderRight:"2px solid var(--border2)" }}>
-                      ← Existing (dashboard)
+                    <th style={{ width:28, background:"var(--surface2)",
+                      borderBottom:"1px solid var(--border)" }}></th>
+                    <th colSpan={smartColHeaders.length}
+                        style={{ background:"rgba(99,102,241,0.1)", padding:"7px 10px",
+                          fontSize:10, fontWeight:700, color:"var(--text2)",
+                          letterSpacing:"0.08em", textTransform:"uppercase", textAlign:"left",
+                          borderBottom:"1px solid var(--border)",
+                          borderRight:"2px solid var(--border2)" }}>
+                      ← Existing
                     </th>
-                    <th colSpan={4} style={{ background:"rgba(16,185,129,0.07)", padding:"7px 10px",
-                      fontSize:10, fontWeight:700, color:"var(--text2)", letterSpacing:"0.08em",
-                      textTransform:"uppercase", textAlign:"left",
-                      borderBottom:"1px solid var(--border)" }}>
-                      Incoming (file) →
+                    <th colSpan={smartColHeaders.length}
+                        style={{ background:"rgba(16,185,129,0.07)", padding:"7px 10px",
+                          fontSize:10, fontWeight:700, color:"var(--text2)",
+                          letterSpacing:"0.08em", textTransform:"uppercase", textAlign:"left",
+                          borderBottom:"1px solid var(--border)" }}>
+                      Incoming →
                     </th>
                   </tr>
                   <tr style={{ background:"var(--surface2)" }}>
-                    {["OTI ID","Date","Hours","Status"].map((h,i) => (
-                      <th key={"l"+h} style={{ padding:"6px 10px", fontSize:10, color:"var(--text3)",
-                        textAlign:"left", borderBottom:"1px solid var(--border)",
-                        borderRight: i===3 ? "2px solid var(--border2)" : "none",
-                        fontWeight:500 }}>{h}</th>
+                    <th style={{ borderBottom:"1px solid var(--border)" }}></th>
+                    {smartColHeaders.map((h,i) => (
+                      <th key={"lh"+h} style={{ padding:"6px 10px", fontSize:10,
+                        color:"var(--text3)", textAlign:"left", fontWeight:500,
+                        borderBottom:"1px solid var(--border)",
+                        borderRight: i===smartColHeaders.length-1 ? "2px solid var(--border2)" : "none" }}>
+                        {h}
+                      </th>
                     ))}
-                    {["OTI ID","Date","Hours","Status"].map(h => (
-                      <th key={"r"+h} style={{ padding:"6px 10px", fontSize:10, color:"var(--text3)",
-                        textAlign:"left", borderBottom:"1px solid var(--border)", fontWeight:500 }}>{h}</th>
+                    {smartColHeaders.map(h => (
+                      <th key={"rh"+h} style={{ padding:"6px 10px", fontSize:10,
+                        color:"var(--text3)", textAlign:"left", fontWeight:500,
+                        borderBottom:"1px solid var(--border)" }}>
+                        {h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Important rows — always visible */}
-                  {visible.important.map((row,i) => <DiffRow key={i} row={row}/>)}
+                  {visibleRows.important.map((row,i) => (
+                    <DiffRow key={i} row={row} idx={i}/>
+                  ))}
 
-                  {/* Unchanged rows — collapsible in "all" tab */}
-                  {visible.unchanged.length > 0 && (
+                  {visibleRows.unchanged.length > 0 && (
                     <>
                       <tr>
-                        <td colSpan={8} style={{ padding:"8px 12px", textAlign:"center",
-                          background:"rgba(255,255,255,0.02)",
-                          borderTop:"1px solid var(--border)", borderBottom:"1px solid var(--border)" }}>
-                          <button onClick={() => setShowUnchanged(v => !v)} style={{
-                            background:"none", border:"1px solid var(--border2)", color:"var(--text3)",
-                            fontSize:11, padding:"4px 14px", borderRadius:20, cursor:"pointer",
+                        <td colSpan={smartColHeaders.length*2+2}
+                            style={{ padding:"8px 12px", textAlign:"center",
+                              background:"rgba(255,255,255,0.02)",
+                              borderTop:"1px solid var(--border)",
+                              borderBottom:"1px solid var(--border)" }}>
+                          <button onClick={()=>setShowUnchanged(v=>!v)} style={{
+                            background:"none", border:"1px solid var(--border2)",
+                            color:"var(--text3)", fontSize:11, padding:"4px 14px",
+                            borderRadius:20, cursor:"pointer",
                           }}>
-                            {showUnchanged ? "▲ Hide" : "▼ Show"} {visible.unchanged.length} unchanged rows
+                            {showUnchanged?"▲ Hide":"▼ Show"} {visibleRows.unchanged.length} unchanged rows
                           </button>
                         </td>
                       </tr>
-                      {showUnchanged && visible.unchanged.map((row,i) => <DiffRow key={"u"+i} row={row}/>)}
+                      {showUnchanged && visibleRows.unchanged.map((row,i) => (
+                        <DiffRow key={"u"+i} row={row} idx={1000+i}/>
+                      ))}
                     </>
                   )}
 
-                  {visible.important.length === 0 && visible.unchanged.length === 0 && (
-                    <tr><td colSpan={8} style={{ padding:"24px", textAlign:"center", color:"var(--text3)", fontSize:13 }}>
+                  {visibleRows.important.length===0 && visibleRows.unchanged.length===0 && (
+                    <tr><td colSpan={smartColHeaders.length*2+2}
+                      style={{ padding:"24px", textAlign:"center", color:"var(--text3)", fontSize:13 }}>
                       No rows to show
                     </td></tr>
                   )}
@@ -341,25 +451,20 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
               </table>
             </div>
 
-            {/* Legend */}
-            <div style={{ display:"flex", gap:12, marginBottom:12, flexWrap:"wrap" }}>
-              {[
-                { color:"#10b981", bg:"rgba(16,185,129,0.15)", label:"New row" },
-                { color:"#f59e0b", bg:"rgba(245,158,11,0.15)",  label:"Changed — old value shown crossed out" },
-                { color:"#ef4444", bg:"rgba(239,68,68,0.15)",   label:"Removed from file" },
-                { color:"#6b7280", bg:"rgba(255,255,255,0.06)", label:"Unchanged" },
-              ].map(({ color, bg, label }) => (
-                <span key={label} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"var(--text3)" }}>
-                  <span style={{ display:"inline-block", width:10, height:10, borderRadius:3,
-                    background:bg, border:`1.5px solid ${color}` }}/>
-                  {label}
-                </span>
-              ))}
+            {/* Legend using pills */}
+            <div style={{ display:"flex", gap:8, marginBottom:12, flexWrap:"wrap", alignItems:"center" }}>
+              <span style={{ fontSize:11, color:"var(--text3)", marginRight:4 }}>Legend:</span>
+              <LegendPill color="#10b981" label="New row"/>
+              <LegendPill color="#f59e0b" label="Changed"/>
+              <LegendPill color="#ef4444" label="Removed"/>
+              <LegendPill color="#6b7280" label="Unchanged"/>
             </div>
 
             {/* Actions */}
-            <div style={{ display:"flex", gap:10, justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
-              <button className="btn-ghost" onClick={() => { setStage("upload"); setDiff(null); }}>Back</button>
+            <div style={{ display:"flex", gap:10, justifyContent:"space-between",
+                          alignItems:"center", flexShrink:0 }}>
+              <button className="btn-ghost"
+                onClick={()=>{ setStage("upload"); setDiff(null); }}>Back</button>
               <div style={{ display:"flex", gap:10, alignItems:"center" }}>
                 {!isFirstImport && diff.added===0 && diff.changed===0 && (
                   <span style={{ fontSize:12, color:"var(--text3)" }}>No new changes to apply</span>
@@ -367,7 +472,7 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
                 <button className="btn"
                   disabled={!isFirstImport && diff.added===0 && diff.changed===0}
                   onClick={handleConfirm}
-                  style={{ opacity:(!isFirstImport && diff.added===0 && diff.changed===0)?0.4:1 }}>
+                  style={{ opacity:(!isFirstImport&&diff.added===0&&diff.changed===0)?0.4:1 }}>
                   {isFirstImport
                     ? `Import ${diff.added} rows`
                     : `Apply ${diff.added+diff.changed} change${diff.added+diff.changed!==1?"s":""}`}
