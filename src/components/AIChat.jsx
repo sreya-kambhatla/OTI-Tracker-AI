@@ -188,7 +188,7 @@ ${assigneeSummaries}`;
                 alignItems: "flex-end", gap: 6,
               }}>
                 {msg.role === "assistant" && i > 0 && (
-                  <div style={{ width:44, height:60, flexShrink:0 }}>
+                  <div style={{ width:64, height:87, flexShrink:0 }}>
                     <svg viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg" style={{width:"100%",height:"100%"}}>
                       <defs>
                         <radialGradient id="rbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#6FEBFF" stopOpacity="0.28"/><stop offset="100%" stopColor="#6FEBFF" stopOpacity="0"/></radialGradient>
@@ -245,7 +245,7 @@ ${assigneeSummaries}`;
                   </div>
                 )}
                 <div style={{
-                  maxWidth: "85%", padding: "9px 13px", borderRadius: 12,
+                  maxWidth: "75%", padding: "9px 13px", borderRadius: 12,
                   fontSize: 13, lineHeight: 1.6,
                   background: msg.role === "user" ? "var(--indigo)" : "rgba(255,255,255,0.06)",
                   color: "var(--text)",
