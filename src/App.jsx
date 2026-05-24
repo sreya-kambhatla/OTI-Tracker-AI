@@ -45,7 +45,18 @@ function App() {
   }, [grouped, sortBy]);
 
   function handleAdd(newLog)              { setLogs(p => [...p, newLog]); setToast(`Log added for ${newLog.otiId}`); }
-  function handleImport(importedLogs)     { setLogs(importedLogs); setToast(`Imported ${importedLogs.length} entries successfully`); }
+  function handleImport(importedLogs, mode) {
+    if (mode === "replace") {
+      setLogs(importedLogs);
+      setToast(`Imported ${importedLogs.length} entries successfully`);
+    } else {
+      // Merge — skip duplicates using otiId + date + assignee as unique key
+      const existingKeys = new Set(logs.map(l => `${l.otiId}|${l.date}|${l.assignee}`));
+      const newLogs = importedLogs.filter(l => !existingKeys.has(`${l.otiId}|${l.date}|${l.assignee}`));
+      setLogs(prev => [...prev, ...newLogs]);
+      setToast(`Merged: ${newLogs.length} new entries added, ${importedLogs.length - newLogs.length} duplicates skipped`);
+    }
+  }
   function handleDelete(id)               { setLogs(p => p.filter(l => l.id !== id)); setToast("Entry deleted"); }
   function handleEdit(updated)            { setLogs(p => p.map(l => l.id === updated.id ? updated : l)); setToast("Entry updated"); }
   function handleStatusChange(otiId, s)   { setLogs(p => p.map(l => l.otiId === otiId ? {...l, status:s} : l)); setToast(`${otiId} marked as ${s}`); }
@@ -119,7 +130,7 @@ function App() {
         </div>
       </div>
 
-      {showImport   && <ImportModal  onImport={handleImport} onClose={() => setShowImport(false)} />}
+      {showImport   && <ImportModal  onImport={handleImport} existingLogs={logs} onClose={() => setShowImport(false)} />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
       <AIChat logs={logs} />
