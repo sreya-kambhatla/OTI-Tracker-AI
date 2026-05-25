@@ -149,7 +149,7 @@ ${assigneeSummaries}`;
         }}
         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-        title="AI Assistant"
+        title="Ori"
       >
         {open ? "✕" : "✦"}
       </button>
@@ -174,13 +174,93 @@ ${assigneeSummaries}`;
           }}>
             <span style={{ fontSize: 18 }}>✦</span>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>AI Assistant</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Ori</div>
               <div style={{ fontSize: 11, color: "var(--text3)" }}>Powered by Claude · {logs.length} entries loaded</div>
             </div>
           </div>
 
           {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+
+            {/* Ori greeting */}
+            {messages.length === 0 && (
+              <div style={{ display:"flex", justifyContent:"center", paddingTop:8 }}>
+                <svg viewBox="0 0 300 330" xmlns="http://www.w3.org/2000/svg" style={{ width:260, height:"auto" }}>
+                  <defs>
+                    <radialGradient id="ogg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#6FEBFF" stopOpacity="0.18"/><stop offset="100%" stopColor="#6FEBFF" stopOpacity="0"/></radialGradient>
+                    <radialGradient id="obG" cx="35%" cy="25%" r="65%"><stop offset="0%" stopColor="#FFFFFF"/><stop offset="100%" stopColor="#D6E2F0"/></radialGradient>
+                    <radialGradient id="oeG" cx="30%" cy="30%" r="70%"><stop offset="0%" stopColor="#A8F8FF"/><stop offset="100%" stopColor="#00CFEE"/></radialGradient>
+                    <filter id="oef"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    <style>{`
+                      @keyframes og{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+                      @keyframes oe{0%,100%{transform:scaleY(1)}45%,55%{transform:scaleY(0.06)}}
+                      @keyframes oa{0%,100%{opacity:0.6}50%{opacity:1}}
+                      @keyframes obg{0%,100%{opacity:0.12}50%{opacity:0.22}}
+                      @keyframes ob1{0%{opacity:0}10%{opacity:1}42%{opacity:1}52%{opacity:0}100%{opacity:0}}
+                      @keyframes ob2{0%,48%{opacity:0}58%{opacity:1}100%{opacity:1}}
+                      .ogb{animation:og 3s ease-in-out infinite}
+                      .oeb{animation:oe 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+                      .oap{animation:oa 2s ease-in-out infinite}
+                      .oggb{animation:obg 3s ease-in-out infinite}
+                      .ob1{animation:ob1 7s ease-in-out infinite}
+                      .ob2{animation:ob2 7s ease-in-out infinite}
+                    `}</style>
+                  </defs>
+                  <ellipse className="oggb" cx="150" cy="210" rx="80" ry="80" fill="url(#ogg)"/>
+                  <g className="ob1">
+                    <rect x="40" y="18" width="220" height="48" rx="14" fill="#0f1c35"/>
+                    <rect x="41" y="19" width="218" height="46" rx="13" fill="none" stroke="#6FEBFF" strokeWidth="1.3" opacity="0.55"/>
+                    <path d="M138 64 L150 76 L162 64" fill="#0f1c35"/>
+                    <path d="M138 64 L150 76 L162 64" fill="none" stroke="#6FEBFF" strokeWidth="1" opacity="0.4"/>
+                    <text x="150" y="38" textAnchor="middle" fontSize="13" fill="#6FEBFF" fontFamily="Arial" fontWeight="700">Hi! I am Ori</text>
+                    <text x="150" y="56" textAnchor="middle" fontSize="11.5" fill="#A5B4FC" fontFamily="Arial">your personal AI companion</text>
+                  </g>
+                  <g className="ob2">
+                    <rect x="8" y="10" width="284" height="90" rx="14" fill="#0f1c35"/>
+                    <rect x="9" y="11" width="282" height="88" rx="13" fill="none" stroke="#6FEBFF" strokeWidth="1.3" opacity="0.55"/>
+                    <path d="M138 98 L150 110 L162 98" fill="#0f1c35"/>
+                    <path d="M138 98 L150 110 L162 98" fill="none" stroke="#6FEBFF" strokeWidth="1" opacity="0.4"/>
+                    <text x="150" y="32" textAnchor="middle" fontSize="12.5" fill="#A5B4FC" fontFamily="Arial">I can spot blockers, flag overdue</text>
+                    <text x="150" y="50" textAnchor="middle" fontSize="12.5" fill="#A5B4FC" fontFamily="Arial">OTIs and summarise any task.</text>
+                    <text x="150" y="68" textAnchor="middle" fontSize="12" fill="#6FEBFF" fontFamily="Arial" fontStyle="italic">"Who has not logged this week?"</text>
+                    <text x="150" y="86" textAnchor="middle" fontSize="12" fill="#6FEBFF" fontFamily="Arial" fontStyle="italic">or "Summarise OTI-10023"</text>
+                  </g>
+                  <g className="ogb">
+                    <ellipse cx="150" cy="322" rx="28" ry="6" fill="#6FEBFF" opacity="0.08"/>
+                    <ellipse cx="90"  cy="255" rx="12" ry="20" fill="#E2EAF5" transform="rotate(15,90,255)"/>
+                    <ellipse cx="210" cy="255" rx="12" ry="20" fill="#E2EAF5" transform="rotate(-15,210,255)"/>
+                    <ellipse cx="150" cy="268" rx="43" ry="35" fill="url(#obG)"/>
+                    <path d="M127 278 Q150 284 173 278" stroke="#C8D4E4" strokeWidth="1.5" fill="none"/>
+                    <rect x="142" y="232" width="17" height="11" rx="5" fill="#C8D4E4"/>
+                    <ellipse cx="150" cy="202" rx="52" ry="48" fill="url(#obG)"/>
+                    <ellipse cx="135" cy="184" rx="22" ry="14" fill="white" opacity="0.13"/>
+                    <rect x="107" y="180" width="86" height="52" rx="15" fill="#0c1628"/>
+                    <rect x="109" y="182" width="82" height="48" rx="13" fill="#0f1c30"/>
+                    <path d="M115 188 Q127 183 138 188" stroke="#6FEBFF" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity="0.6"/>
+                    <path d="M162 188 Q174 183 186 188" stroke="#6FEBFF" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity="0.6"/>
+                    <rect x="115" y="194" width="26" height="22" rx="11" fill="#071020" opacity="0.9"/>
+                    <rect x="159" y="194" width="26" height="22" rx="11" fill="#071020" opacity="0.9"/>
+                    <g className="oeb" filter="url(#oef)">
+                      <rect x="117" y="196" width="22" height="18" rx="9" fill="url(#oeG)" opacity="0.95"/>
+                      <ellipse cx="123" cy="201" rx="5" ry="4" fill="white" opacity="0.4"/>
+                      <rect x="161" y="196" width="22" height="18" rx="9" fill="url(#oeG)" opacity="0.95"/>
+                      <ellipse cx="167" cy="201" rx="5" ry="4" fill="white" opacity="0.4"/>
+                    </g>
+                    <path d="M139 218 Q150 224 161 218" stroke="#6FEBFF" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.85"/>
+                    <ellipse cx="99"  cy="200" rx="7" ry="13" fill="#E2EAF5"/>
+                    <ellipse cx="99"  cy="200" rx="4.5" ry="8" fill="#C8D4E4"/>
+                    <ellipse cx="201" cy="200" rx="7" ry="13" fill="#E2EAF5"/>
+                    <ellipse cx="201" cy="200" rx="4.5" ry="8" fill="#C8D4E4"/>
+                    <line x1="150" y1="155" x2="150" y2="136" stroke="#C8D4E4" strokeWidth="3" strokeLinecap="round"/>
+                    <circle cx="150" cy="128" r="9" fill="#0c1628" stroke="#6FEBFF" strokeWidth="1.5" opacity="0.7"/>
+                    <circle className="oap" cx="150" cy="128" r="5.5" fill="#6FEBFF"/>
+                    <circle cx="150" cy="128" r="2.5" fill="white" opacity="0.9"/>
+                    <ellipse cx="117" cy="221" rx="9" ry="5.5" fill="#FFB3C6" opacity="0.35"/>
+                    <ellipse cx="183" cy="221" rx="9" ry="5.5" fill="#FFB3C6" opacity="0.35"/>
+                  </g>
+                </svg>
+              </div>
+            )}
             {messages.map((msg, i) => (
               <div key={i} style={{
                 display: "flex",
@@ -188,7 +268,7 @@ ${assigneeSummaries}`;
                 alignItems: "flex-end", gap: 6,
               }}>
                 {msg.role === "assistant" && i > 0 && (
-                  <div style={{ width:64, height:87, flexShrink:0 }}>
+                  <div style={{ width:44, height:60, flexShrink:0 }}>
                     <svg viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg" style={{width:"100%",height:"100%"}}>
                       <defs>
                         <radialGradient id="rbg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#6FEBFF" stopOpacity="0.28"/><stop offset="100%" stopColor="#6FEBFF" stopOpacity="0"/></radialGradient>
@@ -245,7 +325,7 @@ ${assigneeSummaries}`;
                   </div>
                 )}
                 <div style={{
-                  maxWidth: "75%", padding: "9px 13px", borderRadius: 12,
+                  maxWidth: "85%", padding: "9px 13px", borderRadius: 12,
                   fontSize: 13, lineHeight: 1.6,
                   background: msg.role === "user" ? "var(--indigo)" : "rgba(255,255,255,0.06)",
                   color: "var(--text)",
