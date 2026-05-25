@@ -6,12 +6,11 @@ const EMPTY = "—";
 
 // Fixed columns — identical for both left and right sides
 const COLS = [
-  { key:"otiId",    label:"OTI ID",   w:"15%" },
-  { key:"date",     label:"Date",     w:"12%" },
-  { key:"assignee", label:"Assignee", w:"12%" },
-  { key:"hours",    label:"Hours",    w:"8%"  },
-  { key:"status",   label:"Status",   w:"13%" },
-  { key:"priority", label:"Priority", w:"10%" },
+  { key:"otiId",    label:"OTI ID",   w:"18%" },
+  { key:"date",     label:"Date",     w:"14%" },
+  { key:"assignee", label:"Assignee", w:"14%" },
+  { key:"hours",    label:"Hours",    w:"10%" },
+  { key:"status",   label:"Status",   w:"16%" },
 ];
 
 const ALL_DETAIL = [
@@ -200,8 +199,10 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
                 {!o
                   ? <span style={{color:"var(--text3)"}}>{EMPTY}</span>
                   : col.key === "status"
-                    ? <span className="badge" style={statusStyle(o.status)}>{o.status}</span>
-                    : <span style={dimmed?{textDecoration:"line-through"}:{}}>{val}</span>
+                    ? dimmed
+                      ? <span style={{textDecoration:"line-through",color:"var(--text3)",fontSize:11}}>{o.status}</span>
+                      : <span className="badge" style={statusStyle(o.status)}>{o.status}</span>
+                    : <span style={dimmed?{textDecoration:"line-through",color:"var(--text3)"}:{}}>{val}</span>
                 }
               </td>
             );
@@ -217,17 +218,9 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
                 {!n
                   ? <span style={{color:"var(--text3)"}}>{EMPTY}</span>
                   : col.key === "status"
-                    ? isChanged
-                      ? <span>
-                          <span style={{textDecoration:"line-through",color:"var(--text3)",marginRight:4,fontSize:11}}>{oldVal}</span>
-                          <span className="badge" style={statusStyle(n.status)}>{n.status}</span>
-                        </span>
-                      : <span className="badge" style={statusStyle(n.status)}>{n.status}</span>
+                    ? <span className="badge" style={statusStyle(n.status)}>{n.status}</span>
                   : isChanged
-                    ? <span>
-                        <span style={{textDecoration:"line-through",color:"var(--text3)",marginRight:4,fontSize:11}}>{oldVal}</span>
-                        <span style={{color:"#fbbf24",fontWeight:600}}>{newVal}</span>
-                      </span>
+                    ? <span style={{color:"#fbbf24",fontWeight:600}}>{newVal}</span>
                     : <span>{newVal}</span>
                 }
               </td>
