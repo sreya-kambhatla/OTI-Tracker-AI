@@ -2,9 +2,7 @@ import React from 'react';
 
 function AIChat({ logs }) {
   const [open,     setOpen]     = React.useState(false);
-  const [messages, setMessages] = React.useState([
-    { role: "assistant", text: "Hi! I can answer questions about your team's OTI data. Try asking who hasn't logged this week, which OTIs are overdue, or ask me to summarise any OTI." }
-  ]);
+  const [messages, setMessages] = React.useState([]);
   const [input,    setInput]    = React.useState("");
   const [loading,  setLoading]  = React.useState(false);
   const bottomRef = React.useRef(null);
