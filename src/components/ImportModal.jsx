@@ -300,9 +300,7 @@ function ImportModal({ onImport, existingLogs = [], onClose }) {
             <p style={{marginBottom:16,color:"var(--text2)",fontSize:13}}>
               {isFirstImport
                 ? "Upload your Excel or CSV file to get started."
-                : "Upload a file — a side-by-side diff shows exactly what will change."}
-              {" "}<span style={{color:"var(--indigo)",cursor:"pointer",textDecoration:"underline"}}
-                onClick={downloadTemplate}>Download template</span>
+                : "Upload a new file — existing entries will be compared and only changes applied."}
             </p>
             <div
               onDragOver={e=>{e.preventDefault();setDragging(true);}}
