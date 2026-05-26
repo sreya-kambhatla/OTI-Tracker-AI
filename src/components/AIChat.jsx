@@ -195,13 +195,13 @@ ${assigneeSummaries}`;
                       @keyframes oa{0%,100%{opacity:0.6}50%{opacity:1}}
                       @keyframes obg{0%,100%{opacity:0.12}50%{opacity:0.22}}
                       @keyframes ob1{0%{opacity:0}10%{opacity:1}42%{opacity:1}52%{opacity:0}100%{opacity:0}}
-                      @keyframes ob2{0%,48%{opacity:0}58%{opacity:1}100%{opacity:1}}
+                      @keyframes ob2{0%,48%{opacity:0}58%,100%{opacity:1}}
                       .ogb{animation:og 3s ease-in-out infinite}
                       .oeb{animation:oe 4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
                       .oap{animation:oa 2s ease-in-out infinite}
                       .oggb{animation:obg 3s ease-in-out infinite}
                       .ob1{animation:ob1 7s ease-in-out infinite}
-                      .ob2{animation:ob2 7s ease-in-out infinite}
+                      .ob2{animation:ob2 7s ease-in-out forwards}
                     `}</style>
                   </defs>
                   <ellipse className="oggb" cx="150" cy="210" rx="80" ry="80" fill="url(#ogg)"/>
