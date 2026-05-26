@@ -60,12 +60,6 @@ function SettingsModal({ onClose }) {
           </div>
         )}
 
-        <p style={{ fontSize:11, color:"var(--text3)", marginBottom:24 }}>
-          Get your API key at{" "}
-          <span style={{ color:"var(--indigo)" }}>console.anthropic.com</span>
-          {" "}→ API Keys → Create Key
-        </p>
-
         {saved && (
           <div style={{ fontSize:12, color:"var(--green)", marginBottom:12 }}>
             ✓ API key saved — AI filtering is now active
