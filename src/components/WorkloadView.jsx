@@ -27,11 +27,11 @@ function WorkloadView({ logs }) {
             </div>
             <table style={{ tableLayout:"fixed" }}>
               <colgroup>
-                <col style={{ width:110 }} />
-                <col />
-                <col style={{ width:120 }} />
-                <col style={{ width:110 }} />
-                <col style={{ width:120 }} />
+                <col style={{ width:"14%" }} />
+                <col style={{ width:"34%" }} />
+                <col style={{ width:"18%" }} />
+                <col style={{ width:"16%" }} />
+                <col style={{ width:"18%" }} />
               </colgroup>
               <thead>
                 <tr>{["OTI ID","Title","Status","Days worked","Last logged"].map(h => <th key={h}>{h}</th>)}</tr>
