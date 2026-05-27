@@ -1,12 +1,17 @@
 import React from 'react';
-import { calcHours, sumHours, groupByOTI, groupByAssignee, groupByWeek, getWeekLabel, statusStyle, priorityStyle, isCritical, applyFilters, loadFromStorage, saveToStorage, exportToCSV, parseCSV, parseExcelJSON, downloadTemplate } from '../utils';
+import { groupByOTI, groupByAssignee, statusStyle } from '../utils';
+import { EmptyState, NoTeamIllustration } from './Icons';
 
 function WorkloadView({ logs }) {
   const byAssignee = React.useMemo(() => groupByAssignee(logs), [logs]);
   const assignees  = Object.keys(byAssignee).sort();
 
   if (assignees.length === 0) return (
-    <div className="card empty"><div className="empty-icon">👥</div><div className="empty-text">No logs to display</div></div>
+    <EmptyState
+      illustration={<NoTeamIllustration />}
+      title="No workload data"
+      subtitle="Log some work hours to see team workload and assignee breakdowns here."
+    />
   );
 
   return (
@@ -16,7 +21,6 @@ function WorkloadView({ logs }) {
         const byOTI    = groupByOTI(entries);
         const otiCount = Object.keys(byOTI).length;
         const days     = new Set(entries.map(e => e.date)).size;
-
         return (
           <div key={assignee} className="card">
             <div style={{ marginBottom:16 }}>
@@ -31,9 +35,9 @@ function WorkloadView({ logs }) {
               </thead>
               <tbody>
                 {Object.entries(byOTI).map(([otiId, otiEntries]) => {
-                  const otiDays  = new Set(otiEntries.map(e => e.date)).size;
-                  const latest   = otiEntries.slice().sort((a,b) => b.date.localeCompare(a.date))[0];
-                  const title    = otiEntries[0].title;
+                  const otiDays = new Set(otiEntries.map(e => e.date)).size;
+                  const latest  = otiEntries.slice().sort((a,b) => b.date.localeCompare(a.date))[0];
+                  const title   = otiEntries[0].title;
                   return (
                     <tr key={otiId}>
                       <td style={{ color:"var(--indigo)", fontWeight:600, whiteSpace:"nowrap" }}>{otiId}</td>
