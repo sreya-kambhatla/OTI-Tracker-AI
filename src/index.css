@@ -53,7 +53,7 @@
 
     #root {
       margin-left: 220px;
-      padding: 64px 2rem 3rem;
+      padding: 1.5rem 2rem 3rem;   /* was 64px 2rem 3rem */
       min-height: 100vh;
       box-sizing: border-box;
     }
