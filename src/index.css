@@ -165,24 +165,27 @@
 
     .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
 
-    /* ─── Flip cards ──────────────────────────────────────────────────────── */
-    .flip-card { perspective: 1000px; cursor: pointer; }
-    .flip-card-inner {
-      position: relative; width: 100%; height: 130px;
-      transition: transform 0.55s cubic-bezier(0.4,0.2,0.2,1);
-      transform-style: preserve-3d;
-    }
-    .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+    /* ─── Flip cards ─────────────────────────────────────────────────────── */
+    .flip-card { cursor: pointer; }
+    .flip-card-inner { position: relative; width: 100%; height: 130px; }
     .flip-card-front, .flip-card-back {
       position: absolute; inset: 0;
       background: rgba(15,25,50,0.75);
       border: 1px solid rgba(255,255,255,0.08);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
       border-radius: 12px; padding: 1rem 1.25rem;
-      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
-    .flip-card-front { display: flex; flex-direction: column; justify-content: space-between; }
-    .flip-card-back  { transform: rotateY(180deg); overflow: hidden; display: flex; flex-direction: column; }
+    .flip-card-front {
+      display: flex; flex-direction: column; justify-content: space-between;
+      opacity: 1; transform: scale(1);
+    }
+    .flip-card-back {
+      overflow: hidden; display: flex; flex-direction: column;
+      opacity: 0; transform: scale(0.96); pointer-events: none;
+    }
+    .flip-card.flipped .flip-card-front { opacity: 0; transform: scale(0.96); pointer-events: none; }
+    .flip-card.flipped .flip-card-back  { opacity: 1; transform: scale(1);    pointer-events: auto; }
     .flip-card-back-header {
       font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.06em; color: var(--text3);
@@ -192,8 +195,8 @@
     .flip-card-back-list { overflow-y: auto; flex: 1; }
     .flip-card-back-list::-webkit-scrollbar { width: 4px; }
     .flip-card-back-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-    .flip-card:hover .flip-card-front { border-color: var(--indigo); }
-    .flip-card:hover .flip-card-back  { border-color: var(--indigo); }
+    .flip-card:hover .flip-card-front,
+    .flip-card:hover .flip-card-back { border-color: var(--indigo); }
 
     @keyframes pulse-ring {
       0%   { box-shadow: 0 0 0 0 rgba(220,38,38,0.6); }
