@@ -12,6 +12,7 @@ import ImportModal from './components/ImportModal';
 import Toast from './components/Toast';
 import AIChat from './components/AIChat';
 import SettingsModal from './components/SettingsModal';
+import { SkeletonAnalytics, SkeletonOTIs, SkeletonWeekly, SkeletonWorkload } from './components/Skeleton';
 
 function App() {
   const [logs,    setLogs]    = React.useState(() => loadFromStorage() || []);
@@ -21,13 +22,18 @@ function App() {
   const [sortBy,  setSortBy]  = React.useState("recent");
   const [showImport,   setShowImport]   = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
-  const [theme, setTheme] = React.useState(() => localStorage.getItem("oti-theme") || "dark");
+  const [theme,   setTheme]   = React.useState(() => localStorage.getItem("oti-theme") || "dark");
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => { saveToStorage(logs); }, [logs]);
   React.useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("oti-theme", theme);
   }, [theme]);
+  React.useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 700);
+    return () => clearTimeout(t);
+  }, []);
 
   const filteredLogs = React.useMemo(() => applyFilters(logs, filters), [logs, filters]);
   const grouped      = React.useMemo(() => groupByOTI(filteredLogs), [filteredLogs]);
@@ -87,39 +93,41 @@ function App() {
         onReset={handleResetData}
       />
 
-      {tab === "analytics" && <Dashboard logs={filteredLogs} />}
+      {tab === "analytics" && (loading ? <SkeletonAnalytics /> : <Dashboard logs={filteredLogs} />)}
 
       {tab === "otis" && (
-        <div>
-          <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
-          <AddEntryForm onAdd={handleAdd} allLogs={logs} />
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"8px 0 12px" }}>
-            <div style={{ fontSize:12, color:"var(--text3)" }}>{Object.keys(grouped).length} OTIs</div>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <label className="form-label" style={{ marginBottom:0, whiteSpace:"nowrap" }}>Sort by</label>
-              <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ maxWidth:180, padding:"5px 10px", fontSize:12 }}>
-                <option value="recent">Last logged</option>
-                <option value="hours-desc">Most hours</option>
-                <option value="hours-asc">Least hours</option>
-              </select>
+        loading ? <SkeletonOTIs /> : (
+          <div>
+            <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
+            <AddEntryForm onAdd={handleAdd} allLogs={logs} />
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"8px 0 12px" }}>
+              <div style={{ fontSize:12, color:"var(--text3)" }}>{Object.keys(grouped).length} OTIs</div>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <label className="form-label" style={{ marginBottom:0, whiteSpace:"nowrap" }}>Sort by</label>
+                <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ maxWidth:180, padding:"5px 10px", fontSize:12 }}>
+                  <option value="recent">Last logged</option>
+                  <option value="hours-desc">Most hours</option>
+                  <option value="hours-asc">Least hours</option>
+                </select>
+              </div>
             </div>
+            {sortedOTIs.length === 0 ? (
+              <div className="card empty">
+                <div className="empty-icon">🔍</div>
+                <div className="empty-text">No OTIs match your current filters</div>
+              </div>
+            ) : (
+              sortedOTIs.map(([otiId, entries]) => (
+                <OTICard key={otiId} otiId={otiId} entries={entries}
+                  onDelete={handleDelete} onEdit={handleEdit} onStatusChange={handleStatusChange} />
+              ))
+            )}
           </div>
-          {sortedOTIs.length === 0 ? (
-            <div className="card empty">
-              <div className="empty-icon">🔍</div>
-              <div className="empty-text">No OTIs match your current filters</div>
-            </div>
-          ) : (
-            sortedOTIs.map(([otiId, entries]) => (
-              <OTICard key={otiId} otiId={otiId} entries={entries}
-                onDelete={handleDelete} onEdit={handleEdit} onStatusChange={handleStatusChange} />
-            ))
-          )}
-        </div>
+        )
       )}
 
-      {tab === "weekly"   && <WeeklyView   logs={filteredLogs} />}
-      {tab === "workload" && <WorkloadView logs={filteredLogs} />}
+      {tab === "weekly"   && (loading ? <SkeletonWeekly />   : <WeeklyView   logs={filteredLogs} />)}
+      {tab === "workload" && (loading ? <SkeletonWorkload /> : <WorkloadView logs={filteredLogs} />)}
 
       {showImport   && <ImportModal  onImport={handleImport} existingLogs={logs} onClose={() => setShowImport(false)} />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
