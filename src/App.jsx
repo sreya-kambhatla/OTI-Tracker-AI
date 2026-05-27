@@ -1,7 +1,6 @@
 import React from 'react';
 import { EMPTY_FILTERS } from './constants';
 import { groupByOTI, sumHours, applyFilters, loadFromStorage, saveToStorage, exportToCSV } from './utils';
-import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Filters from './components/Filters';
@@ -87,8 +86,6 @@ function App() {
         onSettings={() => setShowSettings(true)}
         onReset={handleResetData}
       />
-
-      <TopBar />
 
       {tab === "analytics" && <Dashboard logs={filteredLogs} />}
 
