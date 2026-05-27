@@ -128,3 +128,44 @@ export function EmptyState({ illustration, title, subtitle, action }) {
     </div>
   );
 }
+
+// ─── Navigation icons (16px) ─────────────────────────────────────────────────
+
+export function ListIcon({ size = 16, ...props }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...props}>
+      <path d="M6 4h8M6 8h8M6 12h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+      <circle cx="2.5" cy="4" r="1.1" fill="currentColor"/>
+      <circle cx="2.5" cy="8" r="1.1" fill="currentColor"/>
+      <circle cx="2.5" cy="12" r="1.1" fill="currentColor"/>
+    </svg>
+  );
+}
+
+export function CalendarIcon({ size = 16, ...props }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...props}>
+      <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M2 7h12" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M5 1.5v3M11 1.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+export function ChartIcon({ size = 16, ...props }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...props}>
+      <path d="M2 12V7M6 12V4M10 12V9M14 12V6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+      <path d="M1 13.5h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+export function ResetIcon({ size = 16, ...props }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...props}>
+      <path d="M3 8a5 5 0 105-5H6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+      <path d="M3 4.5V8h3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
