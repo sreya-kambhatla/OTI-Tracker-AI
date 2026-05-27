@@ -59,49 +59,107 @@ ${assigneeSummaries}`;
     const userMsg = (typeof overrideMsg === "string" ? overrideMsg : input).trim();
     if (!userMsg || loading) return;
     setInput("");
-    setMessages(prev => [...prev, { role: "user", text: userMsg }]);
+
+    const currentHistory = messages
+      .filter(m => m.text)
+      .map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.text }));
+
+    setMessages(prev => [...prev,
+      { role: "user", text: userMsg },
+      { role: "assistant", text: "", streaming: true },
+    ]);
     setLoading(true);
 
+    const apiKey  = localStorage.getItem("oti-ai-key");
+    const context = buildContext();
+    const apiMessages = [...currentHistory, { role: "user", content: userMsg }];
+    let fullText = "";
+
     try {
-      const context = buildContext();
-      const history = messages.filter(m => m.role !== "assistant" || messages.indexOf(m) > 0).map(m => ({
-        role: m.role === "assistant" ? "assistant" : "user",
-        content: m.text
-      }));
+      if (apiKey) {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-5",
+            max_tokens: 1024,
+            stream: true,
+            system: context,
+            messages: apiMessages,
+          }),
+        });
 
-      const response = await fetch("https://oti-proxy.vercel.app/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5",
-          max_tokens: 1024,
-          system: context,
-          messages: [...history, { role: "user", content: userMsg }],
-        }),
-      });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error?.message || "API error");
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error?.message || "Request failed");
+        const reader  = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const raw = line.slice(6).trim();
+            if (raw === "[DONE]") continue;
+            try {
+              const evt = JSON.parse(raw);
+              if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
+                fullText += evt.delta.text;
+                const display = fullText.split("\n").filter(l => !l.startsWith("SUGGESTIONS:")).join("\n").trimEnd();
+                setMessages(prev => {
+                  const u = [...prev];
+                  u[u.length - 1] = { role: "assistant", text: display, streaming: true };
+                  return u;
+                });
+              }
+            } catch {}
+          }
+        }
+      } else {
+        const res = await fetch("https://oti-proxy.vercel.app/api", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-5",
+            max_tokens: 1024,
+            system: context,
+            messages: apiMessages,
+          }),
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error?.message || "Request failed");
+        const data = await res.json();
+        fullText = data.content?.[0]?.text || "Sorry, I couldn't get a response.";
       }
 
-      const data = await response.json();
-      const raw  = data.content?.[0]?.text || "Sorry, I couldn't get a response.";
-
-      // Extract suggestions from end of response
-      let text = raw;
+      let text = fullText;
       let suggestions = [];
-      const sugMatch = raw.match(/SUGGESTIONS:\[([^\]]+)\]\s*$/);
+      const sugMatch = fullText.match(/SUGGESTIONS:\[([^\]]+)\]\s*$/);
       if (sugMatch) {
-        try {
-          suggestions = JSON.parse("[" + sugMatch[1] + "]");
-        } catch {}
-        text = raw.slice(0, sugMatch.index).trim();
+        try { suggestions = JSON.parse("[" + sugMatch[1] + "]"); } catch {}
+        text = fullText.slice(0, sugMatch.index).trim();
       }
 
-      setMessages(prev => [...prev, { role: "assistant", text, suggestions }]);
+      setMessages(prev => {
+        const u = [...prev];
+        u[u.length - 1] = { role: "assistant", text, suggestions, streaming: false };
+        return u;
+      });
     } catch (err) {
-      setMessages(prev => [...prev, { role: "assistant", text: "Sorry, something went wrong: " + err.message }]);
+      setMessages(prev => {
+        const u = [...prev];
+        u[u.length - 1] = { role: "assistant", text: "Sorry, something went wrong: " + err.message, streaming: false };
+        return u;
+      });
     } finally {
       setLoading(false);
     }
@@ -125,16 +183,19 @@ ${assigneeSummaries}`;
       .replace(/[*]([^*]+)[*]/g, "<em>$1</em>");
   }
 
-  const suggestions = [
+  const defaultSuggestions = [
     "Who hasn't logged this week?",
     "Which OTIs are critical?",
     "Who is most overloaded?",
     "Summarise this week's activity",
   ];
 
+  const isStreaming = messages.some(m => m.streaming);
+
   return (
     <>
-      {/* Floating button */}
+      <style>{`@keyframes cursor-blink { 0%,100% { opacity:1; } 50% { opacity:0; } }`}</style>
+
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -152,7 +213,6 @@ ${assigneeSummaries}`;
         {open ? "✕" : "✦"}
       </button>
 
-      {/* Chat panel */}
       {open && (
         <div style={{
           position: "fixed", bottom: 92, right: 28, zIndex: 200,
@@ -165,7 +225,6 @@ ${assigneeSummaries}`;
           overflow: "hidden",
         }}>
 
-          {/* Header */}
           <div style={{
             padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)",
             display: "flex", alignItems: "center", gap: 10, flexShrink: 0,
@@ -173,14 +232,14 @@ ${assigneeSummaries}`;
             <span style={{ fontSize: 18 }}>✦</span>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Ori</div>
-              <div style={{ fontSize: 11, color: "var(--text3)" }}>Powered by Claude · {logs.length} entries loaded</div>
+              <div style={{ fontSize: 11, color: "var(--text3)" }}>
+                {localStorage.getItem("oti-ai-key") ? "Streaming · " : ""}Powered by Claude · {logs.length} entries loaded
+              </div>
             </div>
           </div>
 
-          {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
 
-            {/* Ori greeting */}
             {messages.length === 0 && (
               <div style={{ display:"flex", justifyContent:"center", paddingTop:8 }}>
                 <svg viewBox="0 0 300 330" xmlns="http://www.w3.org/2000/svg" style={{ width:260, height:"auto" }}>
@@ -259,6 +318,7 @@ ${assigneeSummaries}`;
                 </svg>
               </div>
             )}
+
             {messages.map((msg, i) => (
               <div key={i} style={{
                 display: "flex",
@@ -331,7 +391,22 @@ ${assigneeSummaries}`;
                   borderBottomLeftRadius: msg.role === "assistant" ? 4 : 12,
                   whiteSpace: "pre-wrap",
                 }}>
-                  <span dangerouslySetInnerHTML={{ __html: formatMsg(msg.text) }} />
+                  {msg.text ? (
+                    <span dangerouslySetInnerHTML={{ __html: formatMsg(msg.text) }} />
+                  ) : (
+                    <span style={{ opacity: 0.4, fontSize: 12 }}>…</span>
+                  )}
+                  {msg.streaming && (
+                    <span style={{
+                      display: "inline-block", width: 2, height: "1em",
+                      background: "var(--text2)", marginLeft: 3,
+                      verticalAlign: "text-bottom", borderRadius: 1,
+                      animationName: "cursor-blink",
+                      animationDuration: "0.7s",
+                      animationTimingFunction: "step-end",
+                      animationIterationCount: "infinite",
+                    }} />
+                  )}
                   {msg.suggestions && msg.suggestions.length > 0 && (
                     <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginTop:10 }}>
                       {msg.suggestions.map((s, si) => (
@@ -352,7 +427,8 @@ ${assigneeSummaries}`;
                 </div>
               </div>
             ))}
-            {loading && (
+
+            {loading && !isStreaming && (
               <div style={{ display:"flex", justifyContent:"flex-start", padding:"4px 0" }}>
                 <div style={{ width:110, height:150 }}>
                   <svg viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg" style={{width:"100%",height:"100%"}}>
@@ -417,10 +493,9 @@ ${assigneeSummaries}`;
             <div ref={bottomRef} />
           </div>
 
-          {/* Suggestions */}
           {messages.length <= 1 && (
             <div style={{ padding: "0 14px 10px", display: "flex", gap: 6, flexWrap: "wrap", flexShrink: 0 }}>
-              {suggestions.map(s => (
+              {defaultSuggestions.map(s => (
                 <button key={s} onClick={() => setInput(s)} style={{
                   fontSize: 11, padding: "3px 10px", borderRadius: 20,
                   border: "1px solid var(--border2)", background: "transparent",
@@ -432,7 +507,6 @@ ${assigneeSummaries}`;
             </div>
           )}
 
-          {/* Input */}
           <div style={{
             padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.06)",
             display: "flex", gap: 8, flexShrink: 0,
@@ -462,9 +536,7 @@ ${assigneeSummaries}`;
                 color: "#fff", cursor: loading || !input.trim() ? "default" : "pointer",
                 fontSize: 18, alignSelf: "flex-end", flexShrink: 0,
               }}
-            >
-              ↑
-            </button>
+            >↑</button>
           </div>
         </div>
       )}
