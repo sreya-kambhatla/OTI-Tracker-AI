@@ -84,40 +84,17 @@ function Dashboard({ logs }) {
 
   return (
     <div>
-      {/* Stat tiles */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px,1fr))", gap:12, marginBottom:16 }}>
-        <StatTile
-          value={totalHours} suffix="h"
-          label="Total hours"
-          sublabel={`across ${totalDays} days`}
-          accent="var(--indigo)"
-        />
-        <StatTile
-          value={totalOTIs}
-          label="Total OTIs"
-          sublabel={`${activeOTIs} currently active`}
-        />
-        <StatTile
-          value={teamMembers}
-          label="Team members"
-          sublabel={`${activeThisWeek} logged this week`}
-          accent="var(--green)"
-        />
-        <StatTile
-          value={avgPerDay} suffix="h"
-          label="Avg per day"
-          sublabel="across all assignees"
-          accent="var(--amber)"
-        />
+        <StatTile value={totalHours} suffix="h" label="Total hours"   sublabel={`across ${totalDays} days`}        accent="var(--indigo)" />
+        <StatTile value={totalOTIs}             label="Total OTIs"    sublabel={`${activeOTIs} currently active`} />
+        <StatTile value={teamMembers}           label="Team members"  sublabel={`${activeThisWeek} logged this week`} accent="var(--green)" />
+        <StatTile value={avgPerDay}  suffix="h" label="Avg per day"   sublabel="across all assignees"              accent="var(--amber)" />
       </div>
 
-      {/* Status breakdown flip cards */}
       <div className="card">
         <div className="card-label">Status breakdown</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(190px,1fr))", gap:12 }}>
-          <FlipCard
-            label="In Progress" value={inProgress.length} accent="var(--amber)"
-            items={inProgress}
+          <FlipCard label="In Progress" value={inProgress.length} accent="var(--amber)" items={inProgress}
             renderItem={([otiId, entries]) => (
               <>
                 <span style={{ fontSize:12, fontWeight:600, color:"var(--indigo)" }}>{otiId}</span>
@@ -125,9 +102,7 @@ function Dashboard({ logs }) {
               </>
             )}
           />
-          <FlipCard
-            label="Completed" value={completed.length} accent="var(--green)"
-            items={completed}
+          <FlipCard label="Completed" value={completed.length} accent="var(--green)" items={completed}
             renderItem={([otiId, entries]) => (
               <>
                 <span style={{ fontSize:12, fontWeight:600, color:"var(--indigo)" }}>{otiId}</span>
@@ -135,9 +110,7 @@ function Dashboard({ logs }) {
               </>
             )}
           />
-          <FlipCard
-            label="Blocked" value={blocked.length} accent="var(--red)"
-            items={blocked}
+          <FlipCard label="Blocked" value={blocked.length} accent="var(--red)" items={blocked}
             renderItem={([otiId, entries]) => (
               <>
                 <span style={{ fontSize:12, fontWeight:600, color:"var(--indigo)" }}>{otiId}</span>
@@ -145,9 +118,7 @@ function Dashboard({ logs }) {
               </>
             )}
           />
-          <FlipCard
-            label="Team overview" value={teamMembers} accent="var(--indigo)"
-            items={Object.entries(byAssignee)}
+          <FlipCard label="Team overview" value={teamMembers} accent="var(--indigo)" items={Object.entries(byAssignee)}
             renderItem={([assignee, entries]) => {
               const otiCount = new Set(entries.map(e => e.otiId)).size;
               return (
