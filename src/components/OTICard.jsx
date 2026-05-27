@@ -1,6 +1,7 @@
 import React from 'react';
 import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '../constants';
 import { calcHours, sumHours, statusStyle, priorityStyle, isCritical } from '../utils';
+import { EditIcon, TrashIcon } from './Icons';
 
 function ConfirmModal({ title, message, onConfirm, onCancel }) {
   return (
@@ -68,17 +69,14 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
 
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12 }}>
         <div style={{ flex:1 }}>
-          {/* Badges */}
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8, flexWrap:"wrap" }}>
             <span style={{ fontSize:12, fontWeight:700, color:"var(--indigo)", background:"var(--indigo-bg)", padding:"3px 9px", borderRadius:20 }}>{otiId}</span>
             <span className="badge" style={statusStyle(latest.status)}>{latest.status}</span>
             <span className={"badge" + (isCritical(latest.priority) ? " badge-critical" : "")} style={priorityStyle(latest.priority)}>{latest.priority}</span>
           </div>
 
-          {/* Title */}
           <div style={{ fontSize:15, fontWeight:600, color:"var(--text)", marginBottom:12 }}>{entries[0].title}</div>
 
-          {/* Meta */}
           <div style={{ display:"flex", gap:24, flexWrap:"wrap", marginBottom:14 }}>
             {[
               { label:"Total hours", value:`${total}h` },
@@ -95,7 +93,6 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
             ))}
           </div>
 
-          {/* Quick-move chips */}
           <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
             <span style={{ fontSize:10, color:"var(--text3)", textTransform:"uppercase", letterSpacing:"0.04em" }}>Move to:</span>
             {STATUS_OPTIONS.filter(s => s !== latest.status).map(s => {
@@ -121,7 +118,6 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
           </div>
         </div>
 
-        {/* Expand toggle */}
         <button
           className="btn-ghost"
           style={{ fontSize:12, whiteSpace:"nowrap", flexShrink:0, display:"flex", alignItems:"center", gap:6 }}
@@ -132,7 +128,6 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
         </button>
       </div>
 
-      {/* Log table */}
       {expanded && (
         <div style={{ marginTop:16, borderTop:"1px solid var(--border)", paddingTop:16 }}>
           <table>
@@ -174,8 +169,8 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
                     <td><span className="badge" style={statusStyle(log.status)}>{log.status}</span></td>
                     <td><span className={"badge" + (isCritical(log.priority) ? " badge-critical" : "")} style={priorityStyle(log.priority)}>{log.priority}</span></td>
                     <td style={{ maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{log.notes || <span style={{ color:"var(--text3)" }}>—</span>}</td>
-                    <td><button className="btn-edit" onClick={() => startEdit(log)} title="Edit">✎</button></td>
-                    <td><button className="btn-delete" onClick={() => setConfirm(log)} title="Delete">×</button></td>
+                    <td><button className="btn-edit" onClick={() => startEdit(log)} title="Edit"><EditIcon /></button></td>
+                    <td><button className="btn-delete" onClick={() => setConfirm(log)} title="Delete"><TrashIcon /></button></td>
                   </tr>
                 )
               ))}
