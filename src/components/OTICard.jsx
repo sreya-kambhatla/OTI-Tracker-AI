@@ -1,6 +1,6 @@
 import React from 'react';
-import { CHART_COLORS, STATUS_OPTIONS, PRIORITY_OPTIONS, MONTHS, EMPTY_FORM, TEMPLATE_HEADERS } from '../constants';
-import { calcHours, sumHours, groupByOTI, groupByAssignee, groupByWeek, getWeekLabel, statusStyle, priorityStyle, isCritical, applyFilters, loadFromStorage, saveToStorage, exportToCSV, parseCSV, parseExcelJSON, downloadTemplate } from '../utils';
+import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '../constants';
+import { calcHours, sumHours, statusStyle, priorityStyle, isCritical } from '../utils';
 
 function ConfirmModal({ title, message, onConfirm, onCancel }) {
   return (
@@ -8,13 +8,28 @@ function ConfirmModal({ title, message, onConfirm, onCancel }) {
       <div className="modal" onClick={e => e.stopPropagation()}>
         <h3>{title}</h3>
         <p>{message}</p>
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
           <button className="btn-ghost" onClick={onCancel}>Cancel</button>
-          <button className="btn-danger" style={{ padding: "8px 20px", fontSize: 13 }} onClick={onConfirm}>Delete</button>
+          <button className="btn-danger" style={{ padding:"8px 20px", fontSize:13 }} onClick={onConfirm}>Delete</button>
         </div>
       </div>
     </div>
   );
+}
+
+function ChevronIcon({ open }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+      style={{ transition:"transform 0.25s", transform: open ? "rotate(180deg)" : "rotate(0deg)", flexShrink:0 }}>
+      <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function accentColor(status) {
+  if (status === "Completed") return "#10b981";
+  if (status === "Blocked")   return "#ef4444";
+  return "#f59e0b";
 }
 
 function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
@@ -23,10 +38,11 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
   const [editForm, setEditForm] = React.useState({});
   const [confirm,  setConfirm]  = React.useState(null);
 
-  const total   = sumHours(entries);
-  const days    = entries.length;
-  const avg     = (total / days).toFixed(1);
-  const latest  = entries.slice().sort((a,b) => b.date.localeCompare(a.date))[0];
+  const total  = sumHours(entries);
+  const days   = entries.length;
+  const avg    = (total / days).toFixed(1);
+  const latest = entries.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+  const accent = accentColor(latest.status);
 
   function startEdit(log) {
     setEditId(log.id);
@@ -40,7 +56,7 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
   }
 
   return (
-    <div className="card">
+    <div className="card" style={{ borderLeft:`3px solid ${accent}` }}>
       {confirm && (
         <ConfirmModal
           title="Delete log entry"
@@ -52,25 +68,23 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
 
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12 }}>
         <div style={{ flex:1 }}>
+          {/* Badges */}
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8, flexWrap:"wrap" }}>
             <span style={{ fontSize:12, fontWeight:700, color:"var(--indigo)", background:"var(--indigo-bg)", padding:"3px 9px", borderRadius:20 }}>{otiId}</span>
             <span className="badge" style={statusStyle(latest.status)}>{latest.status}</span>
             <span className={"badge" + (isCritical(latest.priority) ? " badge-critical" : "")} style={priorityStyle(latest.priority)}>{latest.priority}</span>
-            <div style={{ display:"flex", gap:6, marginLeft:4 }}>
-              {STATUS_OPTIONS.filter(s => s !== latest.status).map(s => (
-                <button key={s} className="btn-ghost" style={{ fontSize:11, padding:"2px 10px" }} onClick={() => onStatusChange(otiId, s)}>
-                  → {s}
-                </button>
-              ))}
-            </div>
           </div>
+
+          {/* Title */}
           <div style={{ fontSize:15, fontWeight:600, color:"var(--text)", marginBottom:12 }}>{entries[0].title}</div>
-          <div style={{ display:"flex", gap:24, flexWrap:"wrap" }}>
+
+          {/* Meta */}
+          <div style={{ display:"flex", gap:24, flexWrap:"wrap", marginBottom:14 }}>
             {[
               { label:"Total hours", value:`${total}h` },
               { label:"Days logged", value:days },
               { label:"Avg / day",   value:`${avg}h` },
-              { label:"Created By",        value:latest.createdBy },
+              { label:"Created by",  value:latest.createdBy },
               { label:"Assignee",    value:latest.assignee },
               { label:"Last logged", value:latest.date },
             ].map(({ label, value }) => (
@@ -80,12 +94,45 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
               </div>
             ))}
           </div>
+
+          {/* Quick-move chips */}
+          <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+            <span style={{ fontSize:10, color:"var(--text3)", textTransform:"uppercase", letterSpacing:"0.04em" }}>Move to:</span>
+            {STATUS_OPTIONS.filter(s => s !== latest.status).map(s => {
+              const st = statusStyle(s);
+              return (
+                <button
+                  key={s}
+                  onClick={() => onStatusChange(otiId, s)}
+                  onMouseEnter={e => { e.currentTarget.style.background = st.background; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                  style={{
+                    fontSize:11, padding:"3px 10px", borderRadius:20,
+                    border:`1px solid ${st.color}55`,
+                    background:"transparent", color:st.color,
+                    cursor:"pointer", fontFamily:"'Inter', sans-serif",
+                    transition:"all 0.15s",
+                  }}
+                >
+                  {s}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <button className="btn-ghost" style={{ fontSize:12, whiteSpace:"nowrap", flexShrink:0 }} onClick={() => setExpanded(e => !e)}>
-          {expanded ? "Hide ⌃" : "View logs ⌄"}
+
+        {/* Expand toggle */}
+        <button
+          className="btn-ghost"
+          style={{ fontSize:12, whiteSpace:"nowrap", flexShrink:0, display:"flex", alignItems:"center", gap:6 }}
+          onClick={() => setExpanded(e => !e)}
+        >
+          {expanded ? "Hide" : "View logs"}
+          <ChevronIcon open={expanded} />
         </button>
       </div>
 
+      {/* Log table */}
       {expanded && (
         <div style={{ marginTop:16, borderTop:"1px solid var(--border)", paddingTop:16 }}>
           <table>
@@ -93,7 +140,7 @@ function OTICard({ otiId, entries, onDelete, onEdit, onStatusChange }) {
               <tr>{["Date","Created By","Assignee","Start","End","Hours","Status","Priority","Notes","",""].map((h,i) => <th key={i}>{h}</th>)}</tr>
             </thead>
             <tbody>
-              {entries.slice().sort((a,b) => a.date.localeCompare(b.date)).map(log => (
+              {entries.slice().sort((a, b) => a.date.localeCompare(b.date)).map(log => (
                 editId === log.id ? (
                   <tr key={log.id} style={{ background:"var(--surface2)" }}>
                     <td><input className="edit-input" type="date" value={editForm.date} onChange={e => setEditForm(p => ({...p, date:e.target.value}))} /></td>
