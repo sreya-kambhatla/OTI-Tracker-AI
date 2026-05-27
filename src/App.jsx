@@ -31,7 +31,6 @@ function App() {
 
   const filteredLogs = React.useMemo(() => applyFilters(logs, filters), [logs, filters]);
   const grouped      = React.useMemo(() => groupByOTI(filteredLogs), [filteredLogs]);
-  const isFiltered   = Object.values(filters).some(Boolean);
 
   const sortedOTIs = React.useMemo(() => {
     const entries = Object.entries(grouped);
@@ -49,7 +48,7 @@ function App() {
     }
   }, [grouped, sortBy]);
 
-  function handleAdd(newLog)              { setLogs(p => [...p, newLog]); setToast(`Log added for ${newLog.otiId}`); }
+  function handleAdd(newLog) { setLogs(p => [...p, newLog]); setToast(`Log added for ${newLog.otiId}`); }
   function handleImport(importedLogs, mode) {
     if (mode === "replace") {
       setLogs(importedLogs);
@@ -86,62 +85,51 @@ function App() {
         onSettings={() => setShowSettings(true)}
       />
 
-      <div className="page-body">
-        <div className="page-static">
-          <Dashboard logs={filteredLogs} />
+      <Dashboard logs={filteredLogs} />
 
-          <div className="tab-bar">
-            {[
-              { id:"otis",     label:"OTIs" },
-              { id:"weekly",   label:"Weekly summary" },
-              { id:"workload", label:"Assignee workload" },
-            ].map(t => (
-              <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {tab === "otis" && (
-            <div>
-              <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
-              <AddEntryForm onAdd={handleAdd} allLogs={logs} />
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"8px 0 4px" }}>
-                <div style={{ fontSize:12, color:"var(--text3)" }}>{Object.keys(grouped).length} OTIs</div>
-                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <label className="form-label" style={{ marginBottom:0, whiteSpace:"nowrap" }}>Sort by</label>
-                  <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ maxWidth:180, padding:"5px 10px", fontSize:12 }}>
-                    <option value="recent">Last logged</option>
-                    <option value="hours-desc">Most hours</option>
-                    <option value="hours-asc">Least hours</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="page-scroll">
-          {tab === "otis" && (
-            <div style={{ marginTop:8 }}>
-              {sortedOTIs.length === 0 ? (
-                <div className="card empty">
-                  <div className="empty-icon">🔍</div>
-                  <div className="empty-text">No OTIs match your current filters</div>
-                </div>
-              ) : (
-                sortedOTIs.map(([otiId, entries]) => (
-                  <OTICard key={otiId} otiId={otiId} entries={entries}
-                    onDelete={handleDelete} onEdit={handleEdit} onStatusChange={handleStatusChange} />
-                ))
-              )}
-            </div>
-          )}
-
-          {tab === "weekly"   && <WeeklyView   logs={filteredLogs} />}
-          {tab === "workload" && <WorkloadView logs={filteredLogs} />}
-        </div>
+      <div className="tab-bar">
+        {[
+          { id:"otis",     label:"OTIs" },
+          { id:"weekly",   label:"Weekly summary" },
+          { id:"workload", label:"Assignee workload" },
+        ].map(t => (
+          <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
       </div>
+
+      {tab === "otis" && (
+        <div>
+          <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
+          <AddEntryForm onAdd={handleAdd} allLogs={logs} />
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"8px 0 12px" }}>
+            <div style={{ fontSize:12, color:"var(--text3)" }}>{Object.keys(grouped).length} OTIs</div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <label className="form-label" style={{ marginBottom:0, whiteSpace:"nowrap" }}>Sort by</label>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ maxWidth:180, padding:"5px 10px", fontSize:12 }}>
+                <option value="recent">Last logged</option>
+                <option value="hours-desc">Most hours</option>
+                <option value="hours-asc">Least hours</option>
+              </select>
+            </div>
+          </div>
+          {sortedOTIs.length === 0 ? (
+            <div className="card empty">
+              <div className="empty-icon">🔍</div>
+              <div className="empty-text">No OTIs match your current filters</div>
+            </div>
+          ) : (
+            sortedOTIs.map(([otiId, entries]) => (
+              <OTICard key={otiId} otiId={otiId} entries={entries}
+                onDelete={handleDelete} onEdit={handleEdit} onStatusChange={handleStatusChange} />
+            ))
+          )}
+        </div>
+      )}
+
+      {tab === "weekly"   && <WeeklyView   logs={filteredLogs} />}
+      {tab === "workload" && <WorkloadView logs={filteredLogs} />}
 
       {showImport   && <ImportModal  onImport={handleImport} existingLogs={logs} onClose={() => setShowImport(false)} />}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
