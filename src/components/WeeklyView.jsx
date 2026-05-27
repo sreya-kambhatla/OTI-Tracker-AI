@@ -1,23 +1,31 @@
 import React from 'react';
-import { CHART_COLORS, STATUS_OPTIONS, PRIORITY_OPTIONS, MONTHS, EMPTY_FORM, TEMPLATE_HEADERS } from '../constants';
-import { calcHours, sumHours, groupByOTI, groupByAssignee, groupByWeek, getWeekLabel, statusStyle, priorityStyle, isCritical, applyFilters, loadFromStorage, saveToStorage, exportToCSV, parseCSV, parseExcelJSON, downloadTemplate } from '../utils';
+import { MONTHS } from '../constants';
+import { groupByOTI, groupByWeek, getWeekLabel } from '../utils';
+import { EmptyState, NoWeeksIllustration } from './Icons';
 
 function WeeklyView({ logs }) {
   const allByWeek   = React.useMemo(() => groupByWeek(logs), [logs]);
   const allWeeks    = Object.keys(allByWeek).sort().reverse();
   const availMonths = React.useMemo(() => {
-    const set = new Set(allWeeks.map(w => w.slice(0,7)));
+    const set = new Set(allWeeks.map(w => w.slice(0, 7)));
     return [...set].sort().reverse();
   }, [allWeeks]);
   const [selMonth, setSelMonth] = React.useState("");
   const weeks = selMonth ? allWeeks.filter(w => w.startsWith(selMonth)) : allWeeks;
+
   function monthLabel(ym) {
     const [y, m] = ym.split("-");
-    return MONTHS[parseInt(m)-1] + " " + y;
+    return MONTHS[parseInt(m) - 1] + " " + y;
   }
+
   if (allWeeks.length === 0) return (
-    <div className="card empty"><div className="empty-icon">📅</div><div className="empty-text">No logs to display</div></div>
+    <EmptyState
+      illustration={<NoWeeksIllustration />}
+      title="No weekly logs yet"
+      subtitle="Log some work hours to see your weekly activity summary here."
+    />
   );
+
   return (
     <div>
       <div className="card" style={{ padding:"1rem 1.5rem", marginBottom:16 }}>
@@ -30,9 +38,15 @@ function WeeklyView({ logs }) {
           {selMonth && <button className="btn-ghost" style={{ fontSize:12 }} onClick={() => setSelMonth("")}>Clear</button>}
         </div>
       </div>
+
       {weeks.length === 0 && (
-        <div className="card empty"><div className="empty-icon">📅</div><div className="empty-text">No entries for this month</div></div>
+        <EmptyState
+          illustration={<NoWeeksIllustration />}
+          title="No entries this month"
+          subtitle="There are no log entries for the selected month."
+        />
       )}
+
       {weeks.map(week => {
         const entries  = allByWeek[week];
         const byOTI    = groupByOTI(entries);
