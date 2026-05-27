@@ -2,7 +2,7 @@ import React from 'react';
 import { EMPTY_FILTERS } from './constants';
 import { groupByOTI, sumHours, applyFilters, loadFromStorage, saveToStorage, exportToCSV } from './utils';
 import { EmptyState, NoDataIllustration, NoResultsIllustration } from './components/Icons';
-import TopBar from './components/TopBar';
+import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Filters from './components/Filters';
 import AddEntryForm from './components/AddEntryForm';
@@ -45,7 +45,7 @@ function App() {
     }
   }, [grouped, sortBy]);
 
-  function handleAdd(newLog)              { setLogs(p => [...p, newLog]); setToast(`Log added for ${newLog.otiId}`); }
+  function handleAdd(newLog)  { setLogs(p => [...p, newLog]); setToast(`Log added for ${newLog.otiId}`); }
   function handleImport(importedLogs, mode) {
     if (mode === "replace") {
       setLogs(importedLogs);
@@ -64,41 +64,36 @@ function App() {
       setToast(`Merged: ${toAdd.length} added, ${toUpdate.length} updated, duplicates skipped`);
     }
   }
-  function handleDelete(id)               { setLogs(p => p.filter(l => l.id !== id)); setToast("Entry deleted"); }
-  function handleEdit(updated)            { setLogs(p => p.map(l => l.id === updated.id ? updated : l)); setToast("Entry updated"); }
-  function handleStatusChange(otiId, s)   { setLogs(p => p.map(l => l.otiId === otiId ? {...l, status:s} : l)); setToast(`${otiId} marked as ${s}`); }
-  function handleResetData()              {
+  function handleDelete(id)             { setLogs(p => p.filter(l => l.id !== id)); setToast("Entry deleted"); }
+  function handleEdit(updated)          { setLogs(p => p.map(l => l.id === updated.id ? updated : l)); setToast("Entry updated"); }
+  function handleStatusChange(otiId, s) { setLogs(p => p.map(l => l.otiId === otiId ? {...l, status:s} : l)); setToast(`${otiId} marked as ${s}`); }
+  function handleResetData() {
     if (confirm("Reset all data? This cannot be undone.")) { setLogs([]); setToast("Data cleared"); }
   }
 
   return (
-    <div>
-      <TopBar
+    <>
+      <Sidebar
+        tab={tab}
+        onTabChange={setTab}
         onImport={() => setShowImport(true)}
         onExport={() => exportToCSV(filteredLogs)}
-        onReset={handleResetData}
         onSettings={() => setShowSettings(true)}
+        onReset={handleResetData}
       />
 
       <div className="page-body">
         <div className="page-static">
           <Dashboard logs={filteredLogs} />
 
-          <div className="tab-bar">
-            {[
-              { id:"otis",     label:"OTIs" },
-              { id:"weekly",   label:"Weekly summary" },
-              { id:"workload", label:"Assignee workload" },
-            ].map(t => (
-              <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
           {tab === "otis" && (
             <div>
-              <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
+              <Filters
+                filters={filters}
+                onChange={(k,v) => setFilters(p => ({...p,[k]:v}))}
+                onClear={() => setFilters(EMPTY_FILTERS)}
+                allLogs={logs}
+              />
               <AddEntryForm onAdd={handleAdd} allLogs={logs} />
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"8px 0 4px" }}>
                 <div style={{ fontSize:12, color:"var(--text3)" }}>{Object.keys(grouped).length} OTIs</div>
@@ -115,7 +110,7 @@ function App() {
           )}
         </div>
 
-        <div className="page-scroll">
+        <div key={tab} className="page-scroll">
           {tab === "otis" && (
             <div style={{ marginTop:8 }}>
               {sortedOTIs.length === 0 ? (
@@ -151,7 +146,7 @@ function App() {
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
       <AIChat logs={logs} />
-    </div>
+    </>
   );
 }
 
