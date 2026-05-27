@@ -2,6 +2,7 @@ import React from 'react';
 import { EMPTY_FILTERS } from './constants';
 import { groupByOTI, sumHours, applyFilters, loadFromStorage, saveToStorage, exportToCSV } from './utils';
 import TopBar from './components/TopBar';
+import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Filters from './components/Filters';
 import AddEntryForm from './components/AddEntryForm';
@@ -76,14 +77,18 @@ function App() {
 
   return (
     <div>
-      <TopBar
+      <Sidebar
+        tab={tab}
+        onTab={setTab}
         theme={theme}
         onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")}
         onImport={() => setShowImport(true)}
         onExport={() => exportToCSV(filteredLogs)}
-        onReset={handleResetData}
         onSettings={() => setShowSettings(true)}
+        onReset={handleResetData}
       />
+
+      <TopBar />
 
       <Dashboard logs={filteredLogs} />
 
