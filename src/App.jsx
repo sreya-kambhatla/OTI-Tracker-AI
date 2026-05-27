@@ -92,20 +92,6 @@ function App() {
 
       {tab === "analytics" && <Dashboard logs={filteredLogs} />}
 
-      {tab !== "analytics" && (
-        <div className="tab-bar">
-          {[
-            { id:"otis",     label:"OTIs" },
-            { id:"weekly",   label:"Weekly summary" },
-            { id:"workload", label:"Assignee workload" },
-          ].map(t => (
-            <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {tab === "otis" && (
         <div>
           <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
