@@ -18,7 +18,7 @@ function App() {
   const [logs,    setLogs]    = React.useState(() => loadFromStorage() || []);
   const [filters, setFilters] = React.useState(EMPTY_FILTERS);
   const [toast,   setToast]   = React.useState(null);
-  const [tab,     setTab]     = React.useState("otis");
+  const [tab,     setTab]     = React.useState("analytics");
   const [sortBy,  setSortBy]  = React.useState("recent");
   const [showImport,   setShowImport]   = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
@@ -90,19 +90,21 @@ function App() {
 
       <TopBar />
 
-      <Dashboard logs={filteredLogs} />
+      {tab === "analytics" && <Dashboard logs={filteredLogs} />}
 
-      <div className="tab-bar">
-        {[
-          { id:"otis",     label:"OTIs" },
-          { id:"weekly",   label:"Weekly summary" },
-          { id:"workload", label:"Assignee workload" },
-        ].map(t => (
-          <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {tab !== "analytics" && (
+        <div className="tab-bar">
+          {[
+            { id:"otis",     label:"OTIs" },
+            { id:"weekly",   label:"Weekly summary" },
+            { id:"workload", label:"Assignee workload" },
+          ].map(t => (
+            <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {tab === "otis" && (
         <div>
