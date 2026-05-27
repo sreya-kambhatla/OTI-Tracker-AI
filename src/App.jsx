@@ -1,6 +1,7 @@
 import React from 'react';
 import { EMPTY_FILTERS } from './constants';
 import { groupByOTI, sumHours, applyFilters, loadFromStorage, saveToStorage, exportToCSV } from './utils';
+import { EmptyState, NoDataIllustration, NoResultsIllustration } from './components/Icons';
 import TopBar from './components/TopBar';
 import Dashboard from './components/Dashboard';
 import Filters from './components/Filters';
@@ -50,13 +51,10 @@ function App() {
       setLogs(importedLogs);
       setToast(`Imported ${importedLogs.length} entries successfully`);
     } else {
-      // Split into new (no existing key) and updates (existing key)
       const existingKeys = new Set(logs.map(l => `${l.otiId}|${l.date}|${l.assignee}`));
       const toAdd    = importedLogs.filter(l => !existingKeys.has(`${l.otiId}|${l.date}|${l.assignee}`));
       const toUpdate = importedLogs.filter(l =>  existingKeys.has(`${l.otiId}|${l.date}|${l.assignee}`));
-
       setLogs(prev => {
-        // Replace changed rows, then append new ones
         const updated = prev.map(existing => {
           const match = toUpdate.find(u => `${u.otiId}|${u.date}|${u.assignee}` === `${existing.otiId}|${existing.date}|${existing.assignee}`);
           return match ? { ...existing, ...match, id: existing.id } : existing;
@@ -121,10 +119,20 @@ function App() {
           {tab === "otis" && (
             <div style={{ marginTop:8 }}>
               {sortedOTIs.length === 0 ? (
-                <div className="card empty">
-                  <div className="empty-icon">🔍</div>
-                  <div className="empty-text">No OTIs match your current filters</div>
-                </div>
+                logs.length === 0 ? (
+                  <EmptyState
+                    illustration={<NoDataIllustration />}
+                    title="No OTIs yet"
+                    subtitle="Add your first log entry above to start tracking your team's work."
+                  />
+                ) : (
+                  <EmptyState
+                    illustration={<NoResultsIllustration />}
+                    title="No results found"
+                    subtitle="No OTIs match your current filters. Try adjusting or clearing them."
+                    action={{ label:"Clear filters", onClick:() => setFilters(EMPTY_FILTERS) }}
+                  />
+                )
               ) : (
                 sortedOTIs.map(([otiId, entries]) => (
                   <OTICard key={otiId} otiId={otiId} entries={entries}
