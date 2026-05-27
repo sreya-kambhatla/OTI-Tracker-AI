@@ -1,8 +1,7 @@
 import React from 'react';
 import { EMPTY_FILTERS } from './constants';
 import { groupByOTI, sumHours, applyFilters, loadFromStorage, saveToStorage, exportToCSV } from './utils';
-import { EmptyState, NoDataIllustration, NoResultsIllustration } from './components/Icons';
-import Sidebar from './components/Sidebar';
+import TopBar from './components/TopBar';
 import Dashboard from './components/Dashboard';
 import Filters from './components/Filters';
 import AddEntryForm from './components/AddEntryForm';
@@ -18,12 +17,17 @@ function App() {
   const [logs,    setLogs]    = React.useState(() => loadFromStorage() || []);
   const [filters, setFilters] = React.useState(EMPTY_FILTERS);
   const [toast,   setToast]   = React.useState(null);
-  const [tab,     setTab]     = React.useState("analytics");
+  const [tab,     setTab]     = React.useState("otis");
   const [sortBy,  setSortBy]  = React.useState("recent");
   const [showImport,   setShowImport]   = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
+  const [theme, setTheme] = React.useState(() => localStorage.getItem("oti-theme") || "dark");
 
   React.useEffect(() => { saveToStorage(logs); }, [logs]);
+  React.useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("oti-theme", theme);
+  }, [theme]);
 
   const filteredLogs = React.useMemo(() => applyFilters(logs, filters), [logs, filters]);
   const grouped      = React.useMemo(() => groupByOTI(filteredLogs), [filteredLogs]);
@@ -32,6 +36,8 @@ function App() {
   const sortedOTIs = React.useMemo(() => {
     const entries = Object.entries(grouped);
     switch (sortBy) {
+      case "id-asc":     return entries.slice().sort((a,b) => a[0].localeCompare(b[0]));
+      case "id-desc":    return entries.slice().sort((a,b) => b[0].localeCompare(a[0]));
       case "hours-desc": return entries.slice().sort((a,b) => sumHours(b[1]) - sumHours(a[1]));
       case "hours-asc":  return entries.slice().sort((a,b) => sumHours(a[1]) - sumHours(b[1]));
       case "recent":     return entries.slice().sort((a,b) => {
@@ -43,7 +49,7 @@ function App() {
     }
   }, [grouped, sortBy]);
 
-  function handleAdd(newLog)  { setLogs(p => [...p, newLog]); setToast(`Log added for ${newLog.otiId}`); }
+  function handleAdd(newLog)              { setLogs(p => [...p, newLog]); setToast(`Log added for ${newLog.otiId}`); }
   function handleImport(importedLogs, mode) {
     if (mode === "replace") {
       setLogs(importedLogs);
@@ -70,26 +76,35 @@ function App() {
   }
 
   return (
-    <>
-      <Sidebar
-        tab={tab}
-        onTabChange={setTab}
+    <div>
+      <TopBar
+        theme={theme}
+        onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")}
         onImport={() => setShowImport(true)}
         onExport={() => exportToCSV(filteredLogs)}
-        onSettings={() => setShowSettings(true)}
         onReset={handleResetData}
+        onSettings={() => setShowSettings(true)}
       />
 
       <div className="page-body">
         <div className="page-static">
+          <Dashboard logs={filteredLogs} />
+
+          <div className="tab-bar">
+            {[
+              { id:"otis",     label:"OTIs" },
+              { id:"weekly",   label:"Weekly summary" },
+              { id:"workload", label:"Assignee workload" },
+            ].map(t => (
+              <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
           {tab === "otis" && (
             <div>
-              <Filters
-                filters={filters}
-                onChange={(k,v) => setFilters(p => ({...p,[k]:v}))}
-                onClear={() => setFilters(EMPTY_FILTERS)}
-                allLogs={logs}
-              />
+              <Filters filters={filters} onChange={(k,v) => setFilters(p => ({...p,[k]:v}))} onClear={() => setFilters(EMPTY_FILTERS)} allLogs={logs} />
               <AddEntryForm onAdd={handleAdd} allLogs={logs} />
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"8px 0 4px" }}>
                 <div style={{ fontSize:12, color:"var(--text3)" }}>{Object.keys(grouped).length} OTIs</div>
@@ -106,26 +121,14 @@ function App() {
           )}
         </div>
 
-        <div key={tab} className="page-scroll">
-          {tab === "analytics" && <Dashboard logs={logs} />}
-
+        <div className="page-scroll">
           {tab === "otis" && (
             <div style={{ marginTop:8 }}>
               {sortedOTIs.length === 0 ? (
-                logs.length === 0 ? (
-                  <EmptyState
-                    illustration={<NoDataIllustration />}
-                    title="No OTIs yet"
-                    subtitle="Add your first log entry above to start tracking your team's work."
-                  />
-                ) : (
-                  <EmptyState
-                    illustration={<NoResultsIllustration />}
-                    title="No results found"
-                    subtitle="No OTIs match your current filters. Try adjusting or clearing them."
-                    action={{ label:"Clear filters", onClick:() => setFilters(EMPTY_FILTERS) }}
-                  />
-                )
+                <div className="card empty">
+                  <div className="empty-icon">🔍</div>
+                  <div className="empty-text">No OTIs match your current filters</div>
+                </div>
               ) : (
                 sortedOTIs.map(([otiId, entries]) => (
                   <OTICard key={otiId} otiId={otiId} entries={entries}
@@ -144,7 +147,7 @@ function App() {
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
       <AIChat logs={logs} />
-    </>
+    </div>
   );
 }
 
