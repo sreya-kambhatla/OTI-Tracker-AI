@@ -1,4 +1,5 @@
 import React from 'react';
+import { SparkleIcon } from './Icons';
 
 function AIQuery({ onApplyFilters, allLogs }) {
   const [query,   setQuery]   = React.useState("");
@@ -80,14 +81,14 @@ Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assi
       }
 
       const valid = ["search","assignee","status","priority","month","year"];
-      const cleaned = {};
+      const result = {};
       for (const key of valid) {
-        cleaned[key] = typeof filters[key] === "string" ? filters[key] : "";
+        result[key] = typeof filters[key] === "string" ? filters[key] : "";
       }
 
       setLastQ(query);
       setQuery("");
-      onApplyFilters(cleaned);
+      onApplyFilters(result);
     } catch (err) {
       setError("Error: " + err.message);
     } finally {
@@ -100,9 +101,9 @@ Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assi
   }
 
   return (
-    <div className="card" style={{ marginBottom: 12 }}>
+    <div className="card" style={{ marginBottom:12 }}>
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
-        <span style={{ fontSize:16 }}>✦</span>
+        <SparkleIcon size={16} />
         <span style={{ fontSize:13, fontWeight:600, color:"var(--text)" }}>Ask AI</span>
         <span style={{ fontSize:11, color:"var(--text3)", marginLeft:4 }}>Filter with natural language</span>
       </div>
@@ -120,9 +121,9 @@ Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assi
           className="btn"
           onClick={handleAsk}
           disabled={loading || !query.trim()}
-          style={{ whiteSpace:"nowrap", minWidth:72, opacity: loading ? 0.7 : 1 }}
+          style={{ whiteSpace:"nowrap", minWidth:80, opacity: loading ? 0.7 : 1, display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}
         >
-          {loading ? "Thinking..." : "Ask ✦"}
+          {loading ? "Thinking…" : <><SparkleIcon size={12} /> Ask</>}
         </button>
       </div>
 
@@ -140,7 +141,7 @@ Available data: ${otiIds.length} OTIs, date range ${dateFrom} to ${dateTo}, assi
         {suggestions.map(s => (
           <button
             key={s}
-            onClick={() => { setQuery(s); }}
+            onClick={() => setQuery(s)}
             style={{
               fontSize:11, padding:"3px 10px", borderRadius:20,
               border:"1px solid var(--border2)", background:"transparent",
