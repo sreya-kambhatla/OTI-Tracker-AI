@@ -18,7 +18,7 @@ function App() {
   const [logs,    setLogs]    = React.useState(() => loadFromStorage() || []);
   const [filters, setFilters] = React.useState(EMPTY_FILTERS);
   const [toast,   setToast]   = React.useState(null);
-  const [tab,     setTab]     = React.useState("otis");
+  const [tab,     setTab]     = React.useState("analytics");
   const [sortBy,  setSortBy]  = React.useState("recent");
   const [showImport,   setShowImport]   = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
@@ -32,8 +32,6 @@ function App() {
   const sortedOTIs = React.useMemo(() => {
     const entries = Object.entries(grouped);
     switch (sortBy) {
-      case "id-asc":     return entries.slice().sort((a,b) => a[0].localeCompare(b[0]));
-      case "id-desc":    return entries.slice().sort((a,b) => b[0].localeCompare(a[0]));
       case "hours-desc": return entries.slice().sort((a,b) => sumHours(b[1]) - sumHours(a[1]));
       case "hours-asc":  return entries.slice().sort((a,b) => sumHours(a[1]) - sumHours(b[1]));
       case "recent":     return entries.slice().sort((a,b) => {
@@ -84,8 +82,6 @@ function App() {
 
       <div className="page-body">
         <div className="page-static">
-          <Dashboard logs={filteredLogs} />
-
           {tab === "otis" && (
             <div>
               <Filters
@@ -111,6 +107,8 @@ function App() {
         </div>
 
         <div key={tab} className="page-scroll">
+          {tab === "analytics" && <Dashboard logs={logs} />}
+
           {tab === "otis" && (
             <div style={{ marginTop:8 }}>
               {sortedOTIs.length === 0 ? (
