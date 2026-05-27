@@ -1,34 +1,9 @@
 import React from 'react';
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, MONTHS } from '../constants';
-import { statusStyle, priorityStyle } from '../utils';
-
-function ChipGroup({ value, options, onChange, getActiveStyle }) {
-  return (
-    <div className="chip-group">
-      <button className={"chip" + (value === "" ? " chip-active" : "")} onClick={() => onChange("")}>
-        All
-      </button>
-      {options.map(opt => {
-        const isActive = value === opt;
-        const st = isActive && getActiveStyle ? getActiveStyle(opt) : null;
-        return (
-          <button
-            key={opt}
-            className={"chip" + (isActive ? " chip-active" : "")}
-            style={st ? { background: st.background, borderColor: st.color, color: st.color } : {}}
-            onClick={() => onChange(isActive ? "" : opt)}
-          >
-            {opt}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 function Filters({ filters, onChange, onClear, allLogs }) {
-  const assignees   = [...new Set(allLogs.map(l => l.assignee))];
-  const years       = [...new Set(allLogs.map(l => l.date.slice(0, 4)))].sort().reverse();
+  const assignees   = [...new Set(allLogs.map(l => l.assignee))].sort();
+  const years       = [...new Set(allLogs.map(l => l.date.slice(0,4)))].sort().reverse();
   const activeCount = Object.values(filters).filter(Boolean).length;
 
   return (
@@ -45,9 +20,8 @@ function Filters({ filters, onChange, onClear, allLogs }) {
         {activeCount > 0 && <button className="btn-danger" onClick={onClear}>Clear all</button>}
       </div>
 
-      {/* Search + dropdowns */}
-      <div className="form-grid" style={{ marginBottom:16 }}>
-        <div style={{ gridColumn:"span 2" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr repeat(3, auto)", gap:12, marginBottom:16, alignItems:"end" }}>
+        <div>
           <label className="form-label">Search</label>
           <input value={filters.search} onChange={e => onChange("search", e.target.value)} placeholder="Search by OTI ID, title or assignee..." />
         </div>
@@ -70,31 +44,40 @@ function Filters({ filters, onChange, onClear, allLogs }) {
           <select value={filters.month} onChange={e => onChange("month", e.target.value)}>
             <option value="">All</option>
             {MONTHS.map((m, i) => (
-              <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
+              <option key={m} value={String(i+1).padStart(2,"0")}>{m}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Status + Priority chip rows */}
-      <div style={{ display:"flex", gap:24, flexWrap:"wrap" }}>
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
         <div>
           <label className="form-label" style={{ marginBottom:8 }}>Status</label>
-          <ChipGroup
-            value={filters.status}
-            options={STATUS_OPTIONS}
-            onChange={v => onChange("status", v)}
-            getActiveStyle={statusStyle}
-          />
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {["", ...STATUS_OPTIONS].map(s => (
+              <button
+                key={s || "all"}
+                className={`chip${filters.status === s ? " chip-active" : ""}`}
+                onClick={() => onChange("status", filters.status === s ? "" : s)}
+              >
+                {s || "All"}
+              </button>
+            ))}
+          </div>
         </div>
         <div>
           <label className="form-label" style={{ marginBottom:8 }}>Priority</label>
-          <ChipGroup
-            value={filters.priority}
-            options={PRIORITY_OPTIONS}
-            onChange={v => onChange("priority", v)}
-            getActiveStyle={priorityStyle}
-          />
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {["", ...PRIORITY_OPTIONS].map(p => (
+              <button
+                key={p || "all"}
+                className={`chip${filters.priority === p ? " chip-active" : ""}`}
+                onClick={() => onChange("priority", filters.priority === p ? "" : p)}
+              >
+                {p || "All"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
