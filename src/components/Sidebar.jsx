@@ -1,10 +1,11 @@
 import React from 'react';
-import { ListIcon, CalendarIcon, ChartIcon, UploadIcon, DownloadIcon, SettingsIcon, ResetIcon } from './Icons';
+import { AnalyticsIcon, ListIcon, CalendarIcon, ChartIcon, UploadIcon, DownloadIcon, SettingsIcon, ResetIcon } from './Icons';
 
 const NAV_ITEMS = [
-  { id:"otis",     label:"OTIs",             Icon: ListIcon },
-  { id:"weekly",   label:"Weekly summary",   Icon: CalendarIcon },
-  { id:"workload", label:"Workload",          Icon: ChartIcon },
+  { id:"analytics", label:"Analytics",      Icon: AnalyticsIcon },
+  { id:"otis",      label:"OTIs",           Icon: ListIcon },
+  { id:"weekly",    label:"Weekly summary", Icon: CalendarIcon },
+  { id:"workload",  label:"Workload",       Icon: ChartIcon },
 ];
 
 function Sidebar({ tab, onTabChange, onImport, onExport, onSettings, onReset }) {
@@ -38,18 +39,10 @@ function Sidebar({ tab, onTabChange, onImport, onExport, onSettings, onReset }) 
 
       <div className="sidebar-footer">
         <div className="sidebar-section-label">Actions</div>
-        <button className="nav-item" onClick={onImport}>
-          <UploadIcon size={15} /> Import CSV
-        </button>
-        <button className="nav-item" onClick={onExport}>
-          <DownloadIcon size={15} /> Export CSV
-        </button>
-        <button className="nav-item" onClick={onSettings}>
-          <SettingsIcon size={15} /> Settings
-        </button>
-        <button className="nav-item nav-danger" onClick={onReset}>
-          <ResetIcon size={15} /> Reset data
-        </button>
+        <button className="nav-item" onClick={onImport}><UploadIcon size={15} /> Import CSV</button>
+        <button className="nav-item" onClick={onExport}><DownloadIcon size={15} /> Export CSV</button>
+        <button className="nav-item" onClick={onSettings}><SettingsIcon size={15} /> Settings</button>
+        <button className="nav-item nav-danger" onClick={onReset}><ResetIcon size={15} /> Reset data</button>
       </div>
     </aside>
   );
