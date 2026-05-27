@@ -351,3 +351,19 @@
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
     .edit-input { padding: 4px 8px !important; font-size: 12px !important; min-width: 80px; }
+
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s ease-in-out infinite;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    html[data-theme="light"] .skeleton {
+      background: linear-gradient(90deg, #e4e9f5 25%, #cdd4e8 50%, #e4e9f5 75%);
+      background-size: 200% 100%;
+    }
