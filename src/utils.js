@@ -169,8 +169,8 @@ export function parseExcelJSON(json) {
     const createdBy = get("createdBy");
     const assignee  = get("assignee");
     const date      = normaliseDate(get("date"));
-    const startTime = get("startTime") || "09:00";
-    const endTime   = get("endTime")   || "17:00";
+    const startTime = normaliseTime(get("startTime")) || "09:00";
+    const endTime   = normaliseTime(get("endTime"))   || "17:00";
     const notes     = get("notes")     || "";
 
     const rawStatus   = get("status").toLowerCase().replace(/\s/g,"");
@@ -251,6 +251,25 @@ function normaliseDate(raw) {
     const dt = new Date(s);
     if (!isNaN(dt)) return dt.toISOString().slice(0,10);
   } catch {}
+  return s;
+}
+
+function normaliseTime(raw) {
+  if (!raw) return "";
+  const s = String(raw).trim();
+  // Already HH:MM or HH:MM:SS
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) {
+    const [h, m] = s.split(":");
+    return `${h.padStart(2,"0")}:${m}`;
+  }
+  // Excel time fraction (0.0–1.0 representing fraction of a day)
+  const num = parseFloat(s);
+  if (!isNaN(num) && num >= 0 && num < 1) {
+    const totalMins = Math.round(num * 24 * 60);
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+  }
   return s;
 }
 
