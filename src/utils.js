@@ -227,7 +227,7 @@ function normaliseDate(raw) {
   // YYYY/MM/DD
   const isoSlash = s.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
   if (isoSlash) return `${isoSlash[1]}-${isoSlash[2]}-${isoSlash[3]}`;
-  // X/Y/YYYY or X-Y-YYYY  (MM/DD/YYYY, DD/MM/YYYY, MM-DD-YYYY, DD-MM-YYYY)
+  // X/Y/YYYY or X-Y-YYYY (MM/DD/YYYY, DD/MM/YYYY, MM-DD-YYYY, DD-MM-YYYY)
   const parts = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
   if (parts) {
     const [, a, b, y] = parts;
@@ -238,7 +238,15 @@ function normaliseDate(raw) {
     else              { month = a; day = b; }  // ambiguous → default MM/DD/YYYY
     return `${y}-${month.padStart(2,"0")}-${day.padStart(2,"0")}`;
   }
-  // JS Date fallback
+  // Excel serial number (integer like 46111 = Jan 30, 2026)
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    const serial = parseFloat(s);
+    if (serial > 1 && serial < 100000) {
+      const dt = new Date(Date.UTC(1899, 11, 30) + Math.round(serial) * 86400000);
+      if (!isNaN(dt)) return dt.toISOString().slice(0, 10);
+    }
+  }
+  // JS Date string fallback
   try {
     const dt = new Date(s);
     if (!isNaN(dt)) return dt.toISOString().slice(0,10);
