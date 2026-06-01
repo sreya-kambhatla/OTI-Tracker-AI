@@ -107,6 +107,12 @@ export function exportToCSV(logs) {
   a.click();
 }
 
+export function formatDisplayDate(isoDate) {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate || "";
+  const [y, m, d] = isoDate.split("-");
+  return `${m}/${d}/${y}`;
+}
+
 export function downloadTemplate() {
   const rows = [
     TEMPLATE_HEADERS,
@@ -218,13 +224,21 @@ function normaliseDate(raw) {
   const s = String(raw).trim();
   // Already YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // M/D/YYYY or MM/DD/YYYY
-  const slash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (slash) {
-    const [, m, d, y] = slash;
-    return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+  // YYYY/MM/DD
+  const isoSlash = s.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  if (isoSlash) return `${isoSlash[1]}-${isoSlash[2]}-${isoSlash[3]}`;
+  // X/Y/YYYY or X-Y-YYYY  (MM/DD/YYYY, DD/MM/YYYY, MM-DD-YYYY, DD-MM-YYYY)
+  const parts = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (parts) {
+    const [, a, b, y] = parts;
+    const an = parseInt(a, 10), bn = parseInt(b, 10);
+    let month, day;
+    if (an > 12)      { day = a; month = b; }  // must be DD-?-YYYY
+    else if (bn > 12) { month = a; day = b; }  // must be MM-DD-YYYY
+    else              { month = a; day = b; }  // ambiguous → default MM/DD/YYYY
+    return `${y}-${month.padStart(2,"0")}-${day.padStart(2,"0")}`;
   }
-  // D/M/YYYY fallback — try JS Date
+  // JS Date fallback
   try {
     const dt = new Date(s);
     if (!isNaN(dt)) return dt.toISOString().slice(0,10);
